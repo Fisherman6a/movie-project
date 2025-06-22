@@ -9,13 +9,16 @@ export const useAuthStore = defineStore('auth', () => {
     const isAuthenticated = computed(() => !!token.value);
     const username = computed(() => user.value?.username);
     const userId = computed(() => user.value?.userId);
+    const profileImageUrl = computed(() => user.value?.profileImageUrl);
+
 
     function setAuth(authData) {
         token.value = authData.token;
         user.value = {
             userId: authData.userId,
             username: authData.username,
-            role: authData.role
+            role: authData.role,
+            profileImageUrl: authData.profileImageUrl
         };
         // 将认证信息存入 localStorage
         localStorage.setItem('token', authData.token);
@@ -29,5 +32,5 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.removeItem('user');
     }
 
-    return { token, user, isAuthenticated, username, userId, setAuth, clearAuth };
+    return { token, user, isAuthenticated, username, userId, profileImageUrl, setAuth, clearAuth };
 });

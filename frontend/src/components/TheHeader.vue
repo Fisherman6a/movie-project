@@ -15,47 +15,81 @@
         </n-button>
       </n-input-group>
 
-      <n-space v-if="!authStore.isAuthenticated">
-        <router-link to="/login"><n-button text strong secondary type="primary">登录</n-button></router-link>
-      </n-space>
-      <n-space v-else>
-        <n-text>欢迎, {{ authStore.username }}</n-text>
-        <router-link to="/my-reviews"><n-button text>我的评论</n-button></router-link>
-        <n-button text @click="handleLogout">登出</n-button>
+      <n-space align="center">
+        <router-link to="/login" v-if="!authStore.isAuthenticated">
+          <n-avatar round>
+            登录
+          </n-avatar>
+        </router-link>
+
+        <n-dropdown v-else :options="dropdownOptions" @select="handleDropdownSelect">
+          <n-avatar round :src="authStore.profileImageUrl" />
+        </n-dropdown>
       </n-space>
     </n-flex>
   </n-layout-header>
 </template>
-  
-  <script setup>
-  import { ref } from 'vue';
-  import { useRouter } from 'vue-router';
-  import { useAuthStore } from '@/stores/authStore';
-  import { useSearchStore } from '@/stores/searchStore'; 
-  import { NLayoutHeader, NFlex, NText, NInputGroup, NInput, NButton, NSpace, useMessage } from 'naive-ui';
-  
-  const router = useRouter();
-  const message = useMessage();
-  const authStore = useAuthStore();
-  const searchTerm = ref('');
-  const searchStore = useSearchStore(); 
-  
-  const handleSearch = () => {
-    if (searchTerm.value.trim()) {
-      router.push({ name: 'MovieSearch', query: { keyword: searchTerm.value.trim() } });
-      searchTerm.value = '';
-    }
-  };
-  
-  const handleLogout = () => {
-      authStore.clearAuth();
-      message.success('已成功登出');
-      router.push('/');
-  };
-  </script>
-  
-  <style scoped>
-  a {
-      text-decoration: none;
+
+<script setup>
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/authStore';
+import { useSearchStore } from '@/stores/searchStore';
+import { NLayoutHeader, NFlex, NText, NInputGroup, NInput, NButton, NSpace, NAvatar, NDropdown, useMessage } from 'naive-ui';
+
+const router = useRouter();
+const message = useMessage();
+const authStore = useAuthStore();
+const searchTerm = ref('');
+const searchStore = useSearchStore();
+
+const dropdownOptions = ref([
+  {
+    label: '我的评论',
+    key: 'my-reviews'
+  },
+  {
+    type: 'divider',
+    key: 'd1'
+  },
+  {
+    label: '登出',
+    key: 'logout'
   }
-  </style>
+]);
+
+const handleSearch = () => {
+  if (searchTerm.value.trim()) {
+    router.push({ name: 'MovieSearch', query: { keyword: searchTerm.value.trim() } });
+    searchTerm.value = '';
+  }
+};
+
+const handleLogout = () => {
+  authStore.clearAuth();
+  message.success('已成功登出');
+  router.push('/');
+};
+
+const handleDropdownSelect = (key) => {
+  switch (key) {
+    case 'my-reviews':
+      router.push('/my-reviews');
+      break;
+    case 'logout':
+      handleLogout();
+      break;
+  }
+};
+</script>
+
+<style scoped>
+a {
+  text-decoration: none;
+}
+
+/* Make the avatar clickable */
+.n-avatar {
+  cursor: pointer;
+}
+</style>

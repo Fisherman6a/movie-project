@@ -51,6 +51,8 @@ public class UserService implements UserDetailsService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         // 默认注册为普通用户
         user.setRole(Role.ROLE_USER);
+        // 为新用户设置一个默认头像 (使用 pravatar 服务生成一个唯一的随机头像)
+        user.setProfileImageUrl("https://i.pravatar.cc/150?u=" + request.getUsername());
 
         User savedUser = userRepository.save(user);
         return convertToDTO(savedUser);

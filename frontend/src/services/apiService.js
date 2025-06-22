@@ -3,7 +3,7 @@ import { useAuthStore } from '@/stores/authStore';
 
 // 创建一个 Axios 实例
 const apiClient = axios.create({
-    baseURL: 'http://localhost:8080/api', // 您的后端 API 地址
+    baseURL: 'http://localhost:7070/api', // 您的后端 API 地址
     headers: {
         'Content-Type': 'application/json'
     }

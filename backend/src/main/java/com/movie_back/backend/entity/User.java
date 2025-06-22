@@ -34,6 +34,9 @@ public class User implements UserDetails {
     @Column(nullable = false, unique = true)
     private String email;
 
+    // 新增：用户头像URL
+    private String profileImageUrl;
+
     // 新增：用户角色字段
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -52,10 +55,7 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<UserRating> userRatings = new HashSet<>();
 
-    // ===============================================
     // 以下为实现 UserDetails 接口所需要的方法
-    // ===============================================
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // 返回用户的角色权限集合
