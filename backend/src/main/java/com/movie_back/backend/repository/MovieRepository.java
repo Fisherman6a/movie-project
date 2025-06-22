@@ -25,4 +25,12 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     // 热门电影推荐 (示例：按平均分降序，取前N个)
     @Query("SELECT m FROM Movie m ORDER BY m.averageRating DESC")
     List<Movie> findTopRatedMovies(org.springframework.data.domain.Pageable pageable);
+
+    // 示例：根据演员姓名模糊查找电影
+    @Query("SELECT m FROM Movie m JOIN m.cast a WHERE a.name LIKE %:actorName%")
+    List<Movie> findMoviesByActorNameContaining(@Param("actorName") String actorName);
+
+    // 示例：根据导演姓名模糊查找电影
+    @Query("SELECT m FROM Movie m JOIN m.directors d WHERE d.name LIKE %:directorName%")
+    List<Movie> findMoviesByDirectorNameContaining(@Param("directorName") String directorName);
 }

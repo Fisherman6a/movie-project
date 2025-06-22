@@ -52,6 +52,18 @@ public class ReviewController {
     }
 
     /**
+     * 获取特定用户所有评论的端点。
+     * 
+     * @param userId 用户的 ID。
+     * @return 评论列表。
+     */
+    @GetMapping("/users/{userId}/reviews")
+    public ResponseEntity<List<ReviewDTO>> getReviewsByUser(@PathVariable Long userId) {
+        List<ReviewDTO> reviews = reviewService.getReviewsForUser(userId);
+        return ResponseEntity.ok(reviews);
+    }
+
+    /**
      * 删除评论的端点。
      * 
      * @param reviewId 要删除的评论 ID。
@@ -62,4 +74,20 @@ public class ReviewController {
         reviewService.deleteReview(reviewId);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * 更新评论的端点。
+     *
+     * @param reviewId      要更新的评论 ID。
+     * @param reviewRequest 评论的新内容。
+     * @return 成功更新后返回更新的评论。
+     */
+    @PutMapping("/reviews/{reviewId}")
+    public ResponseEntity<ReviewDTO> updateReview(
+            @PathVariable Long reviewId,
+            @Valid @RequestBody ReviewRequest reviewRequest) {
+        ReviewDTO updatedReview = reviewService.updateReview(reviewId, reviewRequest);
+        return ResponseEntity.ok(updatedReview);
+    }
+
 }

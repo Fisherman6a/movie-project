@@ -71,4 +71,18 @@ public class MovieController {
         List<MovieDTO> hotMovies = movieService.getHotMovies(limit);
         return ResponseEntity.ok(hotMovies);
     }
+
+    // 根据演员姓名查找电影 - 公开访问
+    @GetMapping("/by-actor")
+    public ResponseEntity<List<MovieDTO>> getMoviesByActorName(@RequestParam String name) {
+        List<MovieDTO> movies = movieService.getMoviesByActorName(name);
+        return ResponseEntity.ok(movies);
+    }
+
+    // 根据导演姓名查找电影 - 公开访问
+    @GetMapping("/by-director")
+    public ResponseEntity<List<MovieDTO>> getMoviesByDirectorName(@RequestParam String name) {
+        List<MovieDTO> movies = movieService.getMoviesByDirectorName(name);
+        return ResponseEntity.ok(movies);
+    }
 }

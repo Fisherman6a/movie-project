@@ -44,6 +44,23 @@ public class ReviewService {
     }
 
     /**
+     * 获取特定用户的所有评论。
+     * 
+     * @param userId 用户的 ID。
+     * @return 评论 DTO 的列表。
+     */
+    @Transactional(readOnly = true)
+    public List<ReviewDTO> getReviewsForUser(Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new ResourceNotFoundException("未找到 ID 为 " + userId + " 的用户");
+        }
+        List<Review> reviews = reviewRepository.findByUserId(userId);
+        return reviews.stream()
+                .map(this::convertToReviewDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * 为电影添加一条新评论。
      * 
      * @param movieId       被评论的电影 ID。
@@ -66,6 +83,27 @@ public class ReviewService {
 
         Review savedReview = reviewRepository.save(review);
         return convertToReviewDTO(savedReview);
+    }
+
+    /**
+     * 更新一条现有评论。
+     *
+     * @param reviewId      要更新的评论 ID。
+     * @param reviewRequest 包含新评论内容的数据。
+     * @return 更新后的评论 DTO。
+     */
+    @Transactional
+    public ReviewDTO updateReview(Long reviewId, ReviewRequest reviewRequest) {
+        // 从数据库找到现有评论
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException("未找到 ID 为 " + reviewId + " 的评论"));
+
+        // 更新评论文本
+        review.setCommentText(reviewRequest.getCommentText());
+
+        // 保存更新后的评论
+        Review updatedReview = reviewRepository.save(review);
+        return convertToReviewDTO(updatedReview);
     }
 
     /**

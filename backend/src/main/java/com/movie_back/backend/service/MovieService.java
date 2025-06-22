@@ -119,6 +119,18 @@ public class MovieService {
                 .collect(Collectors.toList());
     }
 
+    public List<MovieDTO> getMoviesByActorName(String actorName) {
+        return movieRepository.findMoviesByActorNameContaining(actorName).stream()
+                .map(this::convertToMovieDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<MovieDTO> getMoviesByDirectorName(String directorName) {
+        return movieRepository.findMoviesByDirectorNameContaining(directorName).stream()
+                .map(this::convertToMovieDTO)
+                .collect(Collectors.toList());
+    }
+
     // 抽取的公共方法，用于从请求设置电影属性
     private void setMoviePropertiesFromRequest(Movie movie, CreateMovieRequest request) {
         movie.setTitle(request.getTitle());
