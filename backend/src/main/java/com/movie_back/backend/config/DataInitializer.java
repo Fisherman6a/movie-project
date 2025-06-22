@@ -30,7 +30,7 @@ public class DataInitializer implements CommandLineRunner {
             admin.setPassword(passwordEncoder.encode("admin123"));
             admin.setEmail("admin@movie-time.com");
             admin.setRole(Role.ROLE_ADMIN);
-            admin.setProfileImageUrl("HeadPhoto/catcat.jpg");
+            admin.setProfileImageUrl("http://localhost:7070/images/HeadPhoto/catcat.jpg");
             userRepository.save(admin);
             System.out.println("Created ADMIN user: admin");
         }
@@ -45,7 +45,7 @@ public class DataInitializer implements CommandLineRunner {
             regularUser.setPassword(passwordEncoder.encode("user123"));
             regularUser.setEmail("user@movie-time.com");
             regularUser.setRole(Role.ROLE_USER);
-            regularUser.setProfileImageUrl("HeadPhoto/england.png");
+            regularUser.setProfileImageUrl("http://localhost:7070/images/HeadPhoto/england.png");
             userRepository.save(regularUser);
             System.out.println("Created USER user: user");
         }
