@@ -1,5 +1,4 @@
 <template>
-    <TheHeader />
     <n-layout-content content-style="padding: 24px;">
       <n-spin :show="loading">
         <div v-if="movie">
@@ -68,7 +67,7 @@
       NLayoutContent, NSpin, NGrid, NGi, NH1, NH2, NH3, NP, NText, NRate, NDivider, 
       NInput, NButton, NList, NListItem, NThing, NEmpty, NFlex, NAlert, useMessage
   } from 'naive-ui';
-  import TheHeader from '@/components/TheHeader.vue';
+  // import TheHeader from '@/components/TheHeader.vue';
   
   // defineProps 是编译器宏，直接使用即可
   const props = defineProps({

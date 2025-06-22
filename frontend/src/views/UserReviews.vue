@@ -1,5 +1,4 @@
 <template>
-    <TheHeader />
     <n-layout-content content-style="padding: 24px;">
       <n-h2>我的评论</n-h2>
       <n-spin :show="loading">
@@ -53,7 +52,7 @@
   import { ref, onMounted } from 'vue';
   import { useAuthStore } from '@/stores/authStore';
   import apiService from '@/services/apiService';
-  import TheHeader from '@/components/TheHeader.vue';
+  // import TheHeader from '@/components/TheHeader.vue';
   import { 
       NLayoutContent, NH2, NList, NListItem, NThing, NButton, NSpace, 
       NPopconfirm, NSpin, NEmpty, NModal, NInput, NFlex, NText, useMessage 
