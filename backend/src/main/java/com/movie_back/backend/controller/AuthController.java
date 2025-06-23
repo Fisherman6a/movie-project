@@ -40,8 +40,16 @@ public class AuthController {
         String token = jwtUtil.generateToken(user);
 
         // 返回JWT和一些用户信息
-        AuthResponse response = new AuthResponse(token, user.getId(), user.getUsername(), user.getRole().name(),
-                user.getProfileImageUrl());
+        AuthResponse response = new AuthResponse(
+                token,
+                user.getId(),
+                user.getUsername(),
+                user.getRole().name(),
+                user.getProfileImageUrl(),
+                user.getEmail(),
+                user.getPersonalWebsite(),
+                user.getBirthDate(),
+                user.getBio());
         return ResponseEntity.ok(response);
     }
 

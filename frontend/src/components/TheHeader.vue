@@ -44,9 +44,18 @@ const searchTerm = ref('');
 const searchStore = useSearchStore();
 
 const dropdownOptions = ref([
+  // 新增 “我的主页”
+  {
+    label: '我的主页',
+    key: 'profile'
+  },
   {
     label: '我的评论',
     key: 'my-reviews'
+  },
+  {
+    label: '账号设置',
+    key: 'settings'
   },
   {
     type: 'divider',
@@ -60,7 +69,8 @@ const dropdownOptions = ref([
 
 const handleSearch = () => {
   if (searchTerm.value.trim()) {
-    router.push({ name: 'MovieSearch', query: { keyword: searchTerm.value.trim() } });
+    // 页面跳转
+    router.push({ name: 'BrowserPage', query: { title: searchTerm.value.trim() } });
     searchTerm.value = '';
   }
 };
@@ -73,6 +83,12 @@ const handleLogout = () => {
 
 const handleDropdownSelect = (key) => {
   switch (key) {
+    case 'profile':
+      router.push('/profile');
+      break;
+    case 'settings':
+      router.push('/settings');
+      break;
     case 'my-reviews':
       router.push('/my-reviews');
       break;
@@ -81,6 +97,7 @@ const handleDropdownSelect = (key) => {
       break;
   }
 };
+
 </script>
 
 <style scoped>

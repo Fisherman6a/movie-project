@@ -66,7 +66,7 @@ public class SecurityConfig {
                         // 公开访问的端点
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers("/images/**").permitAll()
+                        // .requestMatchers("/images/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/movies/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/actors/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/directors/**").permitAll()

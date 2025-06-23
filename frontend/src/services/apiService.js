@@ -34,6 +34,11 @@ export default {
     getHotMovies(limit = 10) {
         return apiClient.get(`/movies/hot?limit=${limit}`);
     },
+    // 新增：获取最新电影的接口
+    getLatestMovies(limit = 10) {
+        // 假设后端通过 sortBy=releaseYear&sortDir=desc 来实现
+        return apiClient.get(`/movies/search?sortBy=releaseYear&sortDir=desc&size=${limit}`);
+    },
     searchMovies(params) {
         // params 可以是 { name: 'keyword' }
         return apiClient.get(`/movies/${params.type}?name=${params.name}`);
@@ -62,5 +67,10 @@ export default {
     // 评分相关
     rateMovie(movieId, userId, score) {
         return apiClient.post(`/movies/${movieId}/ratings?userId=${userId}`, { score });
-    }
+    },
+
+    // 新增用户相关接口
+    updateUserProfile(profileData) {
+        return apiClient.put('/users/me', profileData);
+    },
 };

@@ -85,7 +85,8 @@ public class MovieService {
     }
 
     // page为当前页号，size为每页包含的电影数量
-    public Page<MovieDTO> searchMovies(Integer releaseYear, String genre, String country, Double minRating,
+    public Page<MovieDTO> searchMovies(Integer releaseYear,
+            String genre, String country, Double minRating,
             String sortBy,
             String sortDir, int page, int size) {
         Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
@@ -97,9 +98,11 @@ public class MovieService {
         if (releaseYear != null) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("releaseYear"), releaseYear));
         }
+
         if (genre != null && !genre.isEmpty()) {
             spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("genre")), "%" + genre.toLowerCase() + "%"));
         }
+
         if (country != null && !country.isEmpty()) {
             spec = spec.and((root, query, cb) -> cb.equal(cb.lower(root.get("country")), country.toLowerCase()));
         }

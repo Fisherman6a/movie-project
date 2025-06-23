@@ -1,6 +1,7 @@
 package com.movie_back.backend.service;
 
 import com.movie_back.backend.dto.user.UserDTO;
+import com.movie_back.backend.dto.user.UserProfileUpdateDTO;
 import com.movie_back.backend.dto.user.UserRegistrationRequest;
 import com.movie_back.backend.entity.Role;
 import com.movie_back.backend.entity.User;
@@ -73,6 +74,21 @@ public class UserService implements UserDetailsService {
         return convertToDTO(user);
     }
 
+    // 添加一个更新用户个人资料的方法
+    @Transactional
+    public UserDTO updateUserProfile(Long userId, UserProfileUpdateDTO profileData) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        user.setUsername(profileData.getUsername());
+        user.setPersonalWebsite(profileData.getPersonalWebsite());
+        user.setBirthDate(profileData.getBirthDate());
+        user.setBio(profileData.getBio());
+
+        User updatedUser = userRepository.save(user);
+        return convertToDTO(updatedUser); // convertToDTO 也需要更新以包含新字段
+    }
+
     private UserDTO convertToDTO(User user) {
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
@@ -80,4 +96,5 @@ public class UserService implements UserDetailsService {
         dto.setEmail(user.getEmail());
         return dto;
     }
+
 }

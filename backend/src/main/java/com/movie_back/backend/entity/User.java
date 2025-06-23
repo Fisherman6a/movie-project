@@ -8,6 +8,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
@@ -43,6 +44,15 @@ public class User implements UserDetails {
     private Role role;
 
     private LocalDateTime createdAt;
+
+    @Column // 个人网站
+    private String personalWebsite;
+
+    @Column // 生日
+    private LocalDate birthDate;
+
+    @Lob // 自我介绍/签名
+    private String bio;
 
     @PrePersist
     protected void onCreate() {

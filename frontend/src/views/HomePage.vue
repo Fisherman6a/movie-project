@@ -28,6 +28,28 @@
         </n-grid-item>
       </n-grid>
     </n-spin>
+
+    <n-h2 prefix="bar" style="margin-top: 40px;">
+      <n-text type="primary">最新电影</n-text>
+    </n-h2>
+    <n-spin :show="loading">
+      <n-grid :x-gap="16" :y-gap="24" :cols="'2 s:3 m:4 l:5 xl:6'" responsive="true">
+        <n-grid-item v-for="movie in latestMovies" :key="movie.id">
+          <router-link :to="{ name: 'MovieDetail', params: { id: movie.id } }">
+            <n-card :title="movie.title" hoverable content-style="padding:0;">
+              <template #cover>
+                <img :src="movie.posterUrl" class="movie-poster-img" :alt="movie.title">
+              </template>
+              <template #footer>
+                <n-p depth="3" style="font-size: 12px; text-align: right;">
+                  {{ movie.releaseYear }}
+                </n-p>
+              </template>
+            </n-card>
+          </router-link>
+        </n-grid-item>
+      </n-grid>
+    </n-spin>
   </n-layout-content>
 </template>
 
@@ -41,6 +63,7 @@ NH2, NGrid, NGridItem, NCard, NRate, NSpin
 import apiService from '@/services/apiService';
 
 const popularMovies = ref([]);
+const latestMovies = ref([]); // 新增 ref
 const loading = ref(true);
 
 const carouselSlides = ref([

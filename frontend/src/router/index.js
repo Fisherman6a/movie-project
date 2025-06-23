@@ -42,6 +42,25 @@ const routes = [
         component: () => import('@/views/UserReviews.vue'),
         meta: { requiresAuth: true }
     },
+    {
+        path: '/profile',
+        name: 'UserProfile',
+        component: () => import('@/views/UserProfile.vue'),
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/settings',
+        name: 'AccountSettings',
+        component: () => import('@/views/AccountSettings.vue'),
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/browser',
+        name: 'BrowserPage',
+        component: () => import('@/views/BrowserPage.vue'),
+        // props 设置为 true 可以让组件通过 props 接收路由参数
+        props: (route) => ({ query: route.query })
+    },
 ];
 
 const router = createRouter({

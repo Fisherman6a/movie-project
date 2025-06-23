@@ -1812,6 +1812,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vicons/ionicons5@npm:^0.13.0":
+  version: 0.13.0
+  resolution: "@vicons/ionicons5@npm:0.13.0"
+  checksum: 10c0/3be530caf976bce192f8565c714b19a53b739a46b9de845fba5fad792b083439aa3fd4206c876e5eb28fe9c163a59ec41c9d4e44cc63d65a282d1d4b001ed84a
+  languageName: node
+  linkType: hard
+
 "@vue/babel-helper-vue-jsx-merge-props@npm:^1.4.0":
   version: 1.4.0
   resolution: "@vue/babel-helper-vue-jsx-merge-props@npm:1.4.0"
@@ -6361,6 +6368,7 @@ __metadata:
   dependencies:
     "@babel/core": "npm:^7.12.16"
     "@babel/eslint-parser": "npm:^7.12.16"
+    "@vicons/ionicons5": "npm:^0.13.0"
     "@vue/cli-plugin-babel": "npm:~5.0.0"
     "@vue/cli-plugin-eslint": "npm:~5.0.0"
     "@vue/cli-service": "npm:~5.0.0"
