@@ -25,18 +25,22 @@ public class Movie {
 
     private Integer duration; // 电影时长(min)
 
+    @Column(length = 100)
     private String genre; // 类型/流派
 
+    @Column(length = 50)
     private String language; // 语言
 
+    @Column(length = 100)
     private String country; // 国家/地区
 
-    @Lob
+    @Lob // Character Large Object类型，mysql中为longtext
     private String synopsis; // 简介
 
     @Column
     private Double averageRating = 0.0; // 评分 (由UserRating计算得出)
 
+    @Column(length = 2048)
     private String posterUrl; // 海报图片URL (用于图形化显示)
 
     @ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE })

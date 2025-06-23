@@ -8,7 +8,7 @@ import com.movie_back.backend.entity.User;
 import com.movie_back.backend.exception.ResourceNotFoundException;
 import com.movie_back.backend.repository.UserRepository;
 // import lombok.RequiredArgsConstructor; // 移除这行
-import org.springframework.context.annotation.Lazy; // 导入 @Lazy
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -53,7 +53,7 @@ public class UserService implements UserDetailsService {
         // 默认注册为普通用户
         user.setRole(Role.ROLE_USER);
         // 为新用户设置一个默认头像 (使用 pravatar 服务生成一个唯一的随机头像)
-        user.setProfileImageUrl("https://i.pravatar.cc/150?u=" + request.getUsername());
+        user.setProfileImageUrl("https://i.ibb.co/N23MW2Gp/userdefault.jpg");
 
         User savedUser = userRepository.save(user);
         return convertToDTO(savedUser);

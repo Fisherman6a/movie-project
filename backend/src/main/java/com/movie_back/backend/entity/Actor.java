@@ -26,8 +26,10 @@ public class Actor {
 
     private LocalDate birthDate; // 出生日期
 
+    @Column(length = 100)
     private String nationality; // 国籍
 
+    @Column(length = 2048)
     private String profileImageUrl; // 演员图片URL
 
     @ManyToMany(mappedBy = "cast", fetch = FetchType.LAZY)

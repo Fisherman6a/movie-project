@@ -6,8 +6,7 @@
         <n-space vertical :size="12">
           <n-h1 style="margin: 0;">{{ user.username }}</n-h1>
 
-          <div v-if="!isEditingBio" @click="startEditingBio" style="cursor: pointer; min-height: 24px;"
-            title="点击编辑签名">
+          <div v-if="!isEditingBio" @click="startEditingBio" style="cursor: pointer; min-height: 24px;" title="点击编辑签名">
             <n-p depth="3">{{ user.bio || '这位用户很神秘，什么都没留下...' }}</n-p>
           </div>
           <div v-else>
@@ -110,7 +109,7 @@ const saveBio = async () => {
     user.value.bio = editingBioText.value;
     authStore.user.bio = editingBioText.value;
     localStorage.setItem('user', JSON.stringify(authStore.user));
-    
+
     message.success('签名更新成功！');
     isEditingBio.value = false; // 退出编辑状态
   } catch (error) {
@@ -126,7 +125,7 @@ onMounted(async () => {
   if (authStore.user) {
     user.value = { ...authStore.user }; // 使用副本以避免意外修改
   }
-  
+
   loadingReviews.value = true;
   try {
     const response = await apiService.getReviewsByUserId(authStore.userId);
@@ -145,6 +144,7 @@ a {
   color: #36ad6a;
   font-weight: bold;
 }
+
 a:hover {
   text-decoration: underline;
 }

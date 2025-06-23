@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Set;
 
 @Entity
-@Table(name = "users") // 'user' is often a reserved keyword
+@Table(name = "users")
 @Data
 @EqualsAndHashCode(exclude = { "reviews", "userRatings" })
 @ToString(exclude = { "reviews", "userRatings" })
@@ -26,7 +26,7 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(length = 50, nullable = false, unique = true)
     private String username;
 
     @Column(nullable = false)
@@ -36,6 +36,7 @@ public class User implements UserDetails {
     private String email;
 
     // 新增：用户头像URL
+    @Column(length = 2048)
     private String profileImageUrl;
 
     // 新增：用户角色字段
@@ -45,7 +46,7 @@ public class User implements UserDetails {
 
     private LocalDateTime createdAt;
 
-    @Column // 个人网站
+    @Column(length = 2048)
     private String personalWebsite;
 
     @Column // 生日

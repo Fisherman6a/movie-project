@@ -57,12 +57,15 @@
 
 <style scoped>
 .site-footer {
-  background-color: #18181c; /* 使用 Naive UI 的深色背景 */
-  color: rgba(255, 255, 255, 0.52); /* 柔和的文字颜色 */
+  background-color: #18181c;
+  /* 使用 Naive UI 的深色背景 */
+  color: rgba(255, 255, 255, 0.52);
+  /* 柔和的文字颜色 */
   padding: 40px 0;
   font-size: 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.09);
 }
+
 .footer-container {
   display: flex;
   flex-wrap: wrap;
@@ -71,36 +74,44 @@
   margin: 0 auto;
   padding: 0 20px;
 }
+
 .footer-column {
   width: 22%;
   min-width: 200px;
   margin-bottom: 20px;
 }
+
 .footer-column h4 {
   color: #ffffff;
   font-size: 16px;
   margin-bottom: 15px;
 }
+
 .footer-column ul {
   list-style: none;
   padding: 0;
   margin: 0;
 }
+
 .footer-column ul li {
   margin-bottom: 10px;
 }
+
 .footer-column a,
 .footer-column p {
   color: rgba(255, 255, 255, 0.52);
   text-decoration: none;
   transition: color 0.3s;
 }
+
 .footer-column a:hover {
   color: #ffffff;
 }
+
 .footer-about {
   line-height: 1.6;
 }
+
 .footer-social-icons a {
   display: inline-block;
   width: 30px;
@@ -115,10 +126,13 @@
   font-weight: bold;
   transition: background-color 0.3s;
 }
+
 .footer-social-icons a:hover {
-  background-color: #36ad6a; /* Naive UI 的主色调 */
+  background-color: #36ad6a;
+  /* Naive UI 的主色调 */
   text-decoration: none;
 }
+
 .footer-bottom {
   text-align: center;
   border-top: 1px solid rgba(255, 255, 255, 0.09);

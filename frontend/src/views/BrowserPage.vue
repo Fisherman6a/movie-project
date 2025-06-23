@@ -5,35 +5,15 @@
     </n-h2>
 
     <n-space align="center" style="margin-bottom: 20px">
-      <n-button
-        text
-        :type="quickFilter === 'all' ? 'primary' : 'default'"
-        @click="handleQuickFilter('all')"
-        tag="a"
-        >全部</n-button
-      >
+      <n-button text :type="quickFilter === 'all' ? 'primary' : 'default'" @click="handleQuickFilter('all')"
+        tag="a">全部</n-button>
       <n-divider vertical />
-      <n-button
-        text
-        :type="quickFilter === 'hot' ? 'primary' : 'default'"
-        @click="handleQuickFilter('hot')"
-        tag="a"
-        >热门电影</n-button
-      >
-      <n-button
-        text
-        :type="quickFilter === 'latest' ? 'primary' : 'default'"
-        @click="handleQuickFilter('latest')"
-        tag="a"
-        >最新电影</n-button
-      >
-      <n-button
-        text
-        :type="quickFilter === 'top_rated' ? 'primary' : 'default'"
-        @click="handleQuickFilter('top_rated')"
-        tag="a"
-        >高分佳片</n-button
-      >
+      <n-button text :type="quickFilter === 'hot' ? 'primary' : 'default'" @click="handleQuickFilter('hot')"
+        tag="a">热门电影</n-button>
+      <n-button text :type="quickFilter === 'latest' ? 'primary' : 'default'" @click="handleQuickFilter('latest')"
+        tag="a">最新电影</n-button>
+      <n-button text :type="quickFilter === 'top_rated' ? 'primary' : 'default'" @click="handleQuickFilter('top_rated')"
+        tag="a">高分佳片</n-button>
     </n-space>
 
     <n-card size="small">
@@ -41,13 +21,8 @@
         <n-space align="center">
           <n-text style="width: 50px">类型:</n-text>
           <n-space>
-            <n-tag
-              v-for="tag in genreTags"
-              :key="tag.value"
-              checkable
-              :checked="filterParams.genre === tag.value"
-              @click="selectFilter('genre', tag.value)"
-            >
+            <n-tag v-for="tag in genreTags" :key="tag.value" checkable :checked="filterParams.genre === tag.value"
+              @click="selectFilter('genre', tag.value)">
               {{ tag.label }}
             </n-tag>
           </n-space>
@@ -55,13 +30,8 @@
         <n-space align="center">
           <n-text style="width: 50px">地区:</n-text>
           <n-space>
-            <n-tag
-              v-for="tag in countryTags"
-              :key="tag.value"
-              checkable
-              :checked="filterParams.country === tag.value"
-              @click="selectFilter('country', tag.value)"
-            >
+            <n-tag v-for="tag in countryTags" :key="tag.value" checkable :checked="filterParams.country === tag.value"
+              @click="selectFilter('country', tag.value)">
               {{ tag.label }}
             </n-tag>
           </n-space>
@@ -69,13 +39,8 @@
         <n-space align="center">
           <n-text style="width: 50px">年代:</n-text>
           <n-space>
-            <n-tag
-              v-for="tag in yearTags"
-              :key="tag.value"
-              checkable
-              :checked="filterParams.releaseYear === tag.value"
-              @click="selectFilter('releaseYear', tag.value)"
-            >
+            <n-tag v-for="tag in yearTags" :key="tag.value" checkable :checked="filterParams.releaseYear === tag.value"
+              @click="selectFilter('releaseYear', tag.value)">
               {{ tag.label }}
             </n-tag>
           </n-space>
@@ -92,13 +57,7 @@
     </n-card>
 
     <n-spin :show="loading" style="margin-top: 24px">
-      <n-grid
-        v-if="movies.length > 0"
-        :x-gap="16"
-        :y-gap="24"
-        :cols="'2 s:3 m:4 l:5 xl:6'"
-        responsive="true"
-      >
+      <n-grid v-if="movies.length > 0" :x-gap="16" :y-gap="24" :cols="'2 s:3 m:4 l:5 xl:6'" responsive="true">
         <n-grid-item v-for="movie in movies" :key="movie.id">
           <router-link :to="{ name: 'MovieDetail', params: { id: movie.id } }">
             <n-card :title="movie.title" hoverable content-style="padding:0;">
@@ -106,30 +65,17 @@
                 <img :src="movie.posterUrl" class="movie-poster-img" />
               </template>
               <template #footer>
-                <n-rate
-                  readonly
-                  :value="movie.averageRating / 2"
-                  allow-half
-                  size="small"
-                />
+                <n-rate readonly :value="movie.averageRating / 2" allow-half size="small" />
               </template>
             </n-card>
           </router-link>
         </n-grid-item>
       </n-grid>
-      <n-empty
-        v-else
-        description="没有找到符合条件的电影。"
-        style="padding: 48px 0"
-      />
+      <n-empty v-else description="没有找到符合条件的电影。" style="padding: 48px 0" />
     </n-spin>
 
     <n-flex justify="center" style="margin-top: 24px">
-      <n-pagination
-        v-model:page="pagination.page"
-        :page-count="pagination.pageCount"
-        @update:page="handlePageChange"
-      />
+      <n-pagination v-model:page="pagination.page" :page-count="pagination.pageCount" @update:page="handlePageChange" />
     </n-flex>
   </n-layout-content>
 </template>
@@ -306,15 +252,18 @@ watch(
   aspect-ratio: 2 / 3;
   object-fit: cover;
 }
+
 :deep(.n-card-header__main) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 a {
   text-decoration: none;
   color: inherit;
 }
+
 .n-button[text] {
   font-size: 16px;
   margin: 0 8px;
