@@ -135,8 +135,8 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import apiService from "@/services/apiService";
 import {
   NLayoutContent,
@@ -157,6 +157,7 @@ import {
 } from "naive-ui";
 
 const route = useRoute();
+const router = useRouter();
 const loading = ref(true);
 const movies = ref([]);
 
@@ -235,67 +236,68 @@ const fetchData = async () => {
   }
 };
 
-// 点击标签进行筛选
+// 点击标签进行筛选, 更新路由
 const selectFilter = (key, value) => {
-  // 如果点击的是已选中的标签，则取消选择（等同于点击“全部”）
+  const newQuery = { ...route.query };
+  delete newQuery.quickFilter; // 清除快速筛选
+  delete newQuery.page; // 重置分页
+
+  // 如果点击的是已选中的标签，则取消选择
   if (filterParams.value[key] === value) {
-    filterParams.value[key] = null;
+    delete newQuery[key];
   } else {
-    filterParams.value[key] = value;
+    newQuery[key] = value;
   }
-  // 手动筛选时，清除快速筛选的状态
-  quickFilter.value = "";
-  pagination.value.page = 1;
-  fetchData();
+  router.push({ query: newQuery });
 };
 
-// 点击顶部快速筛选
+// 点击顶部快速筛选, 更新路由
 const handleQuickFilter = (type) => {
-  quickFilter.value = type;
-  // 重置详细筛选
-  filterParams.value.genre = null;
-  filterParams.value.country = null;
-  filterParams.value.releaseYear = null;
-
-  if (type === "all") {
-    filterParams.value.sortBy = "title";
-    filterParams.value.sortDir = "asc";
-  } else if (type === "hot") {
-    filterParams.value.sortBy = "averageRating";
-    filterParams.value.sortDir = "desc";
-  } else if (type === "latest") {
-    filterParams.value.sortBy = "releaseYear";
-    filterParams.value.sortDir = "desc";
-  } else if (type === "top_rated") {
-    filterParams.value.sortBy = "averageRating";
-    filterParams.value.sortDir = "desc";
-    // 可以在这里加上评分下限，例如 filterParams.value.minRating = 8;
-  }
-  pagination.value.page = 1;
-  fetchData();
+  router.push({ query: { quickFilter: type } });
 };
 
-// 处理分页变化
+// 处理分页变化, 更新路由
 const handlePageChange = (currentPage) => {
-  pagination.value.page = currentPage;
-  fetchData();
+  router.push({ query: { ...route.query, page: currentPage } });
 };
 
-// 监听从 Header 搜索跳转过来的 query
+// 监听路由 query 的变化来更新筛选条件并重新获取数据
 watch(
-  () => route.query.title,
-  (newTitle) => {
-    if (newTitle) {
-      // 这里可以添加一个 title 的筛选参数，如果需要的话
-      console.log("需要按标题搜索:", newTitle);
+  () => route.query,
+  (query) => {
+    // 1. 从 URL 更新组件内部状态
+    pagination.value.page = query.page ? Number(query.page) : 1;
+    quickFilter.value = query.quickFilter || "";
+    filterParams.value.genre = query.genre || null;
+    filterParams.value.country = query.country || null;
+    filterParams.value.releaseYear = query.releaseYear || null;
+
+    // 2. 根据状态设置排序规则
+    if (quickFilter.value === "all") {
+      filterParams.value.sortBy = "title";
+      filterParams.value.sortDir = "asc";
+    } else if (quickFilter.value === "latest") {
+      filterParams.value.sortBy = "releaseYear";
+      filterParams.value.sortDir = "desc";
+    } else {
+      // 默认 (hot, top_rated) 或详细筛选时，都按评分排序
+      filterParams.value.sortBy = "averageRating";
+      filterParams.value.sortDir = "desc";
     }
+
+    // 3. 处理无任何筛选条件的默认情况
+    if (Object.keys(query).length === 0) {
+      quickFilter.value = "hot"; // 默认高亮“热门电影”
+    }
+
+    // 4. 获取数据
+    fetchData();
+  },
+  {
+    immediate: true, // 关键：组件挂载时立即执行一次 watcher
+    deep: true,
   }
 );
-
-// 页面加载时获取初始数据
-onMounted(() => {
-  fetchData();
-});
 </script>
 
 <style scoped>

@@ -69,8 +69,8 @@ const dropdownOptions = ref([
 
 const handleSearch = () => {
   if (searchTerm.value.trim()) {
-    // 页面跳转
-    router.push({ name: 'BrowserPage', query: { title: searchTerm.value.trim() } });
+    // 页面跳转到关键词搜索页面
+    router.push({ name: 'MovieSearch', query: { keyword: searchTerm.value.trim() } });
     searchTerm.value = '';
   }
 };
