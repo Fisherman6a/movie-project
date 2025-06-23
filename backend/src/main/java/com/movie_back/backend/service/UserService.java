@@ -85,6 +85,11 @@ public class UserService implements UserDetailsService {
         user.setBirthDate(profileData.getBirthDate());
         user.setBio(profileData.getBio());
 
+        // 新增：如果请求中包含 profileImageUrl，则更新它
+        if (profileData.getProfileImageUrl() != null && !profileData.getProfileImageUrl().isEmpty()) {
+            user.setProfileImageUrl(profileData.getProfileImageUrl());
+        }
+
         User updatedUser = userRepository.save(user);
         return convertToDTO(updatedUser); // convertToDTO 也需要更新以包含新字段
     }

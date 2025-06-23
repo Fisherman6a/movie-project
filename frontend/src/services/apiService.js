@@ -68,9 +68,20 @@ export default {
     rateMovie(movieId, userId, score) {
         return apiClient.post(`/movies/${movieId}/ratings?userId=${userId}`, { score });
     },
-
     // 新增用户相关接口
-    updateUserProfile(profileData) {
-        return apiClient.put('/users/me', profileData);
+    sendEmailVerificationCode(data) {
+        return axios.post('/api/send-email-code', data); // 替换为你的后端接口
+    },
+    sendPhoneVerificationCode(data) {
+        return axios.post('/api/send-phone-code', data); // 替换为你的后端接口
+    },
+    changeEmail(data) {
+        return axios.post('/api/change-email', data); // 替换为你的后端接口
+    },
+    changePhone(data) {
+        return axios.post('/api/change-phone', data); // 替换为你的后端接口
+    },
+    updateUserProfile(data) {
+        return axios.put('/api/user/profile', data);
     },
 };
