@@ -69,12 +69,29 @@
     </n-grid>
   </n-layout-content>
 
-  <!-- 修改密码 Modal -->
   <n-modal v-model:show="showPasswordModal" preset="card" title="修改密码" style="width: 450px">
-    <!-- ... (修改密码的表单内容保持不变) ... -->
+    <n-form ref="passwordFormRef" :model="passwordForm" :rules="passwordRules" label-placement="left" label-width="80">
+      <n-form-item label="旧密码" path="oldPassword">
+        <n-input type="password" show-password-on="mousedown" v-model:value="passwordForm.oldPassword"
+          placeholder="请输入当前密码" />
+      </n-form-item>
+      <n-form-item label="新密码" path="newPassword">
+        <n-input type="password" show-password-on="mousedown" v-model:value="passwordForm.newPassword"
+          placeholder="请输入新密码" />
+      </n-form-item>
+      <n-form-item label="确认密码" path="confirmPassword">
+        <n-input type="password" show-password-on="mousedown" v-model:value="passwordForm.confirmPassword"
+          placeholder="请再次输入新密码" />
+      </n-form-item>
+    </n-form>
+    <template #footer>
+      <n-flex justify="end">
+        <n-button @click="showPasswordModal = false">取消</n-button>
+        <n-button type="primary" @click="handleChangePassword">确认修改</n-button>
+      </n-flex>
+    </template>
   </n-modal>
 
-  <!-- 绑定/更换 邮箱/手机号 Modal -->
   <n-modal v-model:show="showBindingModal" preset="card" :title="bindingTitle" style="width: 480px"
     @after-leave="countdown = 0">
     <n-form ref="bindingFormRef" :model="bindingForm" :rules="bindingRules">
@@ -83,7 +100,7 @@
       </n-form-item>
       <n-form-item label="验证码" path="code">
         <n-input-group>
-          <n-input v-model:value="bindingForm.code" placeholder="请输入6位验证码" />
+          <n-input v-model:value="bindingForm.code" placeholder="请输入任意6位验证码（模拟）" />
           <n-button @click="sendCode" :loading="codeSending" :disabled="isCountingDown">
             {{ countdownText }}
           </n-button>
@@ -104,24 +121,9 @@ import { ref, onMounted, computed } from "vue";
 import { useAuthStore } from "@/stores/authStore";
 import apiService from "@/services/apiService";
 import {
-  NLayoutContent,
-  NGrid,
-  NGi,
-  NMenu,
-  NCard,
-  NForm,
-  NFormItem,
-  NInput,
-  NInputGroup,
-  NAvatar,
-  NUpload,
-  NButton,
-  NSpace,
-  NFlex,
-  NDatePicker,
-  NText,
-  NModal,
-  useMessage,
+  NLayoutContent, NGrid, NGi, NMenu, NCard, NForm, NFormItem, NInput,
+  NInputGroup, NAvatar, NUpload, NButton, NSpace, NFlex, NDatePicker,
+  NText, NModal, useMessage,
 } from "naive-ui";
 import axios from "axios";
 
@@ -129,17 +131,11 @@ const authStore = useAuthStore();
 const message = useMessage();
 const activeKey = ref("basic");
 const saving = ref(false);
-const showPasswordModal = ref(false);
 const uploadingToHost = ref(false);
 
 const profileForm = ref({
-  username: "",
-  profileImageUrl: "",
-  personalWebsite: "",
-  bio: "",
-  birthDate: null,
-  email: "",
-  phone: "",
+  username: "", profileImageUrl: "", personalWebsite: "",
+  bio: "", birthDate: null, email: "", phone: "",
 });
 
 const maskedPhone = computed(() => {
@@ -150,62 +146,40 @@ const maskedPhone = computed(() => {
   return phone;
 });
 
-// --- 绑定/更换 Modal 的完整逻辑 ---
+// --- 绑定/更换 Modal 的逻辑 ---
 const showBindingModal = ref(false);
-const bindingType = ref(""); // 'email' or 'phone'
+const bindingType = ref("");
 const bindingFormRef = ref(null);
 const bindingForm = ref({ value: "", code: "" });
+const codeSending = ref(false);
+const countdown = ref(0);
+const isCountingDown = computed(() => countdown.value > 0);
+const countdownText = computed(() => isCountingDown.value ? `${countdown.value}s 后重试` : "发送验证码");
 
 const bindingRules = computed(() => {
   const rules = {
-    code: {
-      required: true,
-      message: "请输入验证码",
-      trigger: ["input", "blur"],
-    },
+    code: { required: true, message: "请输入验证码", trigger: ["input", "blur"], },
   };
   if (bindingType.value === "phone") {
     rules.value = {
-      required: true,
-      trigger: ["input", "blur"],
+      required: true, trigger: ["input", "blur"],
       validator(rule, value) {
-        if (!value) {
-          return new Error("请输入手机号码");
-        }
-        if (!/^\d{11}$/.test(value)) {
-          return new Error("请输入11位有效的手机号码");
-        }
+        if (!value) { return new Error("请输入手机号码"); }
+        if (!/^\d{11}$/.test(value)) { return new Error("请输入11位有效的手机号码"); }
         return true;
       },
     };
   } else {
-    // email rules
-    rules.value = {
-      required: true,
-      type: "email",
-      message: "请输入有效的邮箱地址",
-      trigger: ["input", "blur"],
-    };
+    rules.value = { required: true, type: "email", message: "请输入有效的邮箱地址", trigger: ["input", "blur"], };
   }
   return rules;
 });
-
-const codeSending = ref(false);
-const countdown = ref(0);
-const isCountingDown = computed(() => countdown.value > 0);
-const countdownText = computed(() =>
-  isCountingDown.value ? `${countdown.value}s 后重试` : "发送验证码"
-);
-
 const bindingTitle = computed(() => {
   const action = profileForm.value[bindingType.value] ? "更换" : "绑定";
   const type = bindingType.value === "email" ? "邮箱" : "手机号";
   return `${action}${type}`;
 });
-
-const bindingLabel = computed(
-  () => "新" + (bindingType.value === "email" ? "邮箱地址" : "手机号码")
-);
+const bindingLabel = computed(() => "新" + (bindingType.value === "email" ? "邮箱地址" : "手机号码"));
 const bindingPlaceholder = computed(() => "请输入" + bindingLabel.value);
 
 function openBindingModal(type) {
@@ -217,122 +191,97 @@ function openBindingModal(type) {
 }
 
 async function sendCode() {
-  // 仅验证目标字段
-  bindingFormRef.value
-    ?.validate(
-      (errors) => {
-        if (errors) {
-          message.error(errors[0][0].message);
-          return;
-        }
-        // 验证通过，执行发送逻辑
-        executeSendCode();
-      },
-      (rule) => rule.key === "value"
-    )
-    .catch(() => { }); // 捕获并忽略Promise拒绝，因为我们已经在回调中处理了
+  bindingFormRef.value?.validate(
+    (errors) => {
+      if (errors) { message.error(errors[0][0].message); return; }
+      executeSendCode();
+    },
+    (rule) => rule.key === "value"
+  ).catch(() => { });
 }
 
 async function executeSendCode() {
   codeSending.value = true;
-  try {
-    // 调用真实API
-    await apiService.sendVerificationCode({
-      destination: bindingForm.value.value,
-      type: bindingType.value.toUpperCase(), // 'EMAIL' or 'PHONE'
-    });
-
-    message.success("验证码已发送，请注意查收");
+  setTimeout(() => {
+    message.success("验证码已发送（模拟）");
+    codeSending.value = false;
     countdown.value = 60;
     const interval = setInterval(() => {
       countdown.value--;
-      if (countdown.value <= 0) {
-        clearInterval(interval);
-      }
+      if (countdown.value <= 0) clearInterval(interval);
     }, 1000);
-  } catch (error) {
-    message.error(
-      "发送失败: " + (error.response?.data?.message || error.message)
-    );
-  } finally {
-    codeSending.value = false;
-  }
+  }, 500);
 }
 
+// **核心修改 1**: 使用 try...catch 结构重构 submitBinding 函数
 async function submitBinding() {
   try {
     await bindingFormRef.value?.validate();
-
-    const apiCall =
-      bindingType.value === "email"
-        ? apiService.changeEmail({
-          newEmail: bindingForm.value.value,
-          verificationCode: bindingForm.value.code,
-        })
-        : apiService.changePhone({
-          newPhone: bindingForm.value.value,
-          verificationCode: bindingForm.value.code,
-        });
-
-    await apiCall;
-
+    // 验证通过后，执行模拟成功的逻辑
     message.success(`${bindingTitle.value}成功！`);
     profileForm.value[bindingType.value] = bindingForm.value.value;
     authStore.user[bindingType.value] = bindingForm.value.value;
     localStorage.setItem("user", JSON.stringify(authStore.user));
     showBindingModal.value = false;
-  } catch (error) {
-    if (Array.isArray(error)) {
-      // 这是表单验证错误
-      message.error("请检查输入内容是否正确");
-    } else {
-      // 这是API错误
-      message.error(
-        "操作失败: " + (error.response?.data?.message || error.message)
-      );
-    }
+  } catch (validationErrors) {
+    // 验证失败后，捕获错误并给出提示
+    message.error("请按要求填写所有字段。");
+    console.log("Form validation failed:", validationErrors);
   }
 }
 
-// --- 其他逻辑 ---
+// --- 修改密码相关的完整逻辑 ---
+const showPasswordModal = ref(false);
+const passwordFormRef = ref(null);
+const passwordForm = ref({ oldPassword: '', newPassword: '', confirmPassword: '' });
+const validatePasswordSame = (rule, value) => {
+  if (value !== passwordForm.value.newPassword) {
+    return new Error('两次输入的密码不一致');
+  }
+  return true;
+};
+const passwordRules = {
+  oldPassword: { required: true, message: '请输入旧密码', trigger: 'blur' },
+  newPassword: { required: true, min: 6, message: '新密码长度不能少于6位', trigger: 'blur' },
+  confirmPassword: [
+    { required: true, message: '请再次输入密码', trigger: 'blur' },
+    { validator: validatePasswordSame, trigger: ['input', 'blur'] }
+  ]
+};
+
+// **核心修改 2**: 使用 try...catch 结构重构 handleChangePassword 函数
+const handleChangePassword = async () => {
+  try {
+    await passwordFormRef.value?.validate();
+    // 验证通过后，执行模拟成功的逻辑
+    message.success("密码修改成功（模拟）");
+    showPasswordModal.value = false;
+  } catch (validationErrors) {
+    // 验证失败后，捕获错误并给出提示
+    message.error("请按要求填写所有字段。");
+    console.log("Form validation failed:", validationErrors);
+  }
+};
+
+
+// --- 其他逻辑保持不变 ---
 onMounted(() => {
   if (authStore.user) {
     profileForm.value = { ...authStore.user };
   }
 });
 
-const menuOptions = [
-  { label: "基本资料", key: "basic" },
-  { label: "账号安全", key: "security" },
-];
-
-const uploadToImageHost = async (file) => {
-  const imgbbApiKey = "4312ec520960fe609d17eb3f8a99ca5e";
-  const formData = new FormData();
-  formData.append("image", file);
-  formData.append("key", imgbbApiKey);
-  try {
-    const response = await axios.post(
-      "https://api.imgbb.com/1/upload",
-      formData
-    );
-    return response.data.data.url;
-  } catch (error) {
-    throw new Error(
-      "上传到图床失败: " +
-      (error.response?.data?.error?.message || error.message)
-    );
-  }
-};
+const menuOptions = [{ label: "基本资料", key: "basic" }, { label: "账号安全", key: "security" }];
 
 const customAvatarUploadRequest = async ({ file, onFinish, onError }) => {
   uploadingToHost.value = true;
+  const formData = new FormData();
+  formData.append("image", file.file);
+  formData.append("key", "4312ec520960fe609d17eb3f8a99ca5e");
   try {
-    const imageUrl = await uploadToImageHost(file.file);
-    profileForm.value.profileImageUrl = imageUrl;
-    authStore.user.profileImageUrl = imageUrl;
-    localStorage.setItem("user", JSON.stringify(authStore.user));
-    message.success("头像更新成功");
+    const response = await axios.post("https://api.imgbb.com/1/upload", formData);
+    profileForm.value.profileImageUrl = response.data.data.url;
+    message.success("头像预览更新成功，请点击下方“保存修改”以生效。");
     onFinish();
   } catch (error) {
     message.error(error.message);
@@ -357,9 +306,7 @@ const handleSave = async () => {
     localStorage.setItem("user", JSON.stringify(authStore.user));
     message.success("个人资料更新成功！");
   } catch (error) {
-    message.error(
-      "保存失败: " + (error.response?.data?.message || error.message)
-    );
+    message.error("保存失败: " + (error.response?.data?.message || error.message));
   } finally {
     saving.value = false;
   }
