@@ -10,6 +10,7 @@ public class ReviewDTO { // 用于展示
     private String movieTitle;
     private Long userId;
     private String username;
+    private String userProfileImageUrl; // 新增：用户头像URL
     private String commentText;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

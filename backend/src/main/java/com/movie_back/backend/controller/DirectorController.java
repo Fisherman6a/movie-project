@@ -18,26 +18,28 @@ public class DirectorController {
 
     private final DirectorService directorService;
 
-    // 创建导演 - 仅限管理员
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DirectorDTO> createDirector(@Valid @RequestBody DirectorDTO directorDTO) {
         return new ResponseEntity<>(directorService.createDirector(directorDTO), HttpStatus.CREATED);
     }
 
-    // 获取所有导演列表 - 公开
     @GetMapping
     public ResponseEntity<List<DirectorDTO>> getAllDirectors() {
         return ResponseEntity.ok(directorService.getAllDirectors());
     }
 
-    // 获取单个导演信息 - 公开
+    // 新增：按姓名搜索导演 - 公开
+    @GetMapping("/search")
+    public ResponseEntity<List<DirectorDTO>> searchDirectors(@RequestParam String name) {
+        return ResponseEntity.ok(directorService.searchDirectorsByName(name));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<DirectorDTO> getDirectorById(@PathVariable Long id) {
         return ResponseEntity.ok(directorService.getDirectorById(id));
     }
 
-    // 更新导演信息 - 仅限管理员
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DirectorDTO> updateDirector(@PathVariable Long id,
@@ -45,7 +47,6 @@ public class DirectorController {
         return ResponseEntity.ok(directorService.updateDirector(id, directorDTO));
     }
 
-    // 删除导演 - 仅限管理员
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteDirector(@PathVariable Long id) {

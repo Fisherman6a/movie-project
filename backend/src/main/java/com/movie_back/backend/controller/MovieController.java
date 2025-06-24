@@ -19,14 +19,12 @@ import java.util.List;
 public class MovieController {
     private final MovieService movieService;
 
-    // 创建电影 - 仅限管理员
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MovieDTO> createMovie(@Valid @RequestBody CreateMovieRequest movieRequest) {
         return new ResponseEntity<>(movieService.createMovie(movieRequest), HttpStatus.CREATED);
     }
 
-    // 更新电影 - 仅限管理员
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MovieDTO> updateMovie(@PathVariable Long id,
@@ -34,7 +32,6 @@ public class MovieController {
         return ResponseEntity.ok(movieService.updateMovie(id, movieRequest));
     }
 
-    // 删除电影 - 仅限管理员
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteMovie(@PathVariable Long id) {
@@ -42,16 +39,15 @@ public class MovieController {
         return ResponseEntity.noContent().build();
     }
 
-    // 获取单个电影详情 - 公开访问
     @GetMapping("/{id}")
     public ResponseEntity<MovieDTO> getMovieById(@PathVariable Long id) {
         MovieDTO movie = movieService.getMovieById(id);
         return ResponseEntity.ok(movie);
     }
 
-    // 组合查询电影 - 公开访问
     @GetMapping("/search")
     public ResponseEntity<Page<MovieDTO>> searchMovies(
+            @RequestParam(required = false) String title, // **新增**
             @RequestParam(required = false) Integer releaseYear,
             @RequestParam(required = false) String genre,
             @RequestParam(required = false) String country,
@@ -60,26 +56,24 @@ public class MovieController {
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<MovieDTO> movies = movieService.searchMovies(releaseYear, genre, country, minRating, sortBy, sortDir, page,
+        Page<MovieDTO> movies = movieService.searchMovies(title, releaseYear, genre, country, minRating, sortBy,
+                sortDir, page,
                 size);
         return ResponseEntity.ok(movies);
     }
 
-    // 获取热门电影 - 公开访问
     @GetMapping("/hot")
     public ResponseEntity<List<MovieDTO>> getHotMovies(@RequestParam(defaultValue = "10") int limit) {
         List<MovieDTO> hotMovies = movieService.getHotMovies(limit);
         return ResponseEntity.ok(hotMovies);
     }
 
-    // 根据演员姓名查找电影 - 公开访问
     @GetMapping("/by-actor")
     public ResponseEntity<List<MovieDTO>> getMoviesByActorName(@RequestParam String name) {
         List<MovieDTO> movies = movieService.getMoviesByActorName(name);
         return ResponseEntity.ok(movies);
     }
 
-    // 根据导演姓名查找电影 - 公开访问
     @GetMapping("/by-director")
     public ResponseEntity<List<MovieDTO>> getMoviesByDirectorName(@RequestParam String name) {
         List<MovieDTO> movies = movieService.getMoviesByDirectorName(name);

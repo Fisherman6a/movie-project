@@ -1,5 +1,6 @@
 package com.movie_back.backend.dto.actor;
 
+import com.movie_back.backend.entity.Gender; // 引入 Gender
 import lombok.Data;
 import java.time.LocalDate;
 
@@ -7,8 +8,9 @@ import java.time.LocalDate;
 public class ActorDTO {
     private Long id;
     private String name;
-    private String gender;
+    private Gender gender;
     private LocalDate birthDate;
     private String nationality;
     private String profileImageUrl;
+    private String biography;
 }

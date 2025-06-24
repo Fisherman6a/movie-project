@@ -4,7 +4,7 @@
             <n-input v-model:value="model.name" placeholder="输入姓名" />
         </n-form-item>
         <n-form-item label="性别" path="gender">
-            <n-input v-model:value="model.gender" placeholder="输入性别" />
+            <n-select v-model:value="model.gender" placeholder="选择性别" :options="genderOptions" />
         </n-form-item>
         <n-form-item label="国籍" path="nationality">
             <n-input v-model:value="model.nationality" placeholder="输入国籍" />
@@ -15,7 +15,7 @@
         </n-form-item>
         <n-form-item label="头像" path="profileImageUrl">
             <n-space vertical>
-                <n-avatar v-if="model.profileImageUrl" :size="96" :src="model.profileImageUrl" round />
+                <img v-if="model.profileImageUrl" :src="model.profileImageUrl" class="form-image-preview" />
                 <n-upload :custom-request="handleUpload" :show-file-list="false" :max="1" accept="image/*">
                     <n-button :loading="uploading">
                         <template #icon>
@@ -24,15 +24,18 @@
                         上传图片
                     </n-button>
                 </n-upload>
-                <n-input v-model:value="model.profileImageUrl" placeholder="或直接粘贴图片链接" />
             </n-space>
+        </n-form-item>
+        <n-form-item label="简介" path="biography">
+            <n-input v-model:value="model.biography" type="textarea" placeholder="输入人物简介..."
+                :autosize="{ minRows: 4, maxRows: 8 }" />
         </n-form-item>
     </n-form>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
-import { NForm, NFormItem, NInput, NDatePicker, NSpace, NAvatar, NUpload, NButton, NIcon, useMessage } from 'naive-ui';
+import { ref, computed } from 'vue';
+import { NForm, NFormItem, NInput, NDatePicker, NSpace, NUpload, NButton, NIcon, useMessage, NSelect } from 'naive-ui';
 import { CloudUploadOutline as CloudUploadIcon } from '@vicons/ionicons5';
 import axios from 'axios';
 
@@ -41,27 +44,32 @@ const emit = defineEmits(['update:modelValue']);
 
 const message = useMessage();
 const formRef = ref(null);
-const model = ref({});
 const uploading = ref(false);
+
+const model = computed({
+    get: () => props.modelValue,
+    set: (value) => {
+        emit('update:modelValue', value);
+    }
+});
+
+// **核心修改**: 定义下拉框选项
+const genderOptions = [
+    { label: '男', value: 'MALE' },
+    { label: '女', value: 'FEMALE' },
+    { label: '其他', value: 'OTHER' }
+];
+
 const rules = {
     name: { required: true, message: '请输入姓名', trigger: 'blur' },
+    profileImageUrl: { required: true, message: '请上传头像', trigger: 'blur' },
 };
-
-// 当外部传入的 modelValue 变化时，更新内部的 model
-watch(() => props.modelValue, (newValue) => {
-    model.value = { ...newValue };
-}, { immediate: true, deep: true });
-
-// 当内部的 model 变化时，通知外部
-watch(model, (newValue) => {
-    emit('update:modelValue', newValue);
-}, { deep: true });
 
 const handleUpload = async ({ file, onFinish, onError }) => {
     uploading.value = true;
     const formData = new FormData();
     formData.append("image", file.file);
-    formData.append("key", "4312ec520960fe609d17eb3f8a99ca5e"); // 你的 ImgBB API Key
+    formData.append("key", "4312ec520960fe609d17eb3f8a99ca5e");
 
     try {
         const response = await axios.post("https://api.imgbb.com/1/upload", formData);
@@ -76,11 +84,19 @@ const handleUpload = async ({ file, onFinish, onError }) => {
     }
 };
 
-// 暴露 validate 方法给父组件调用
-const validate = () => { // <--- 移除 callback 参数
-    return formRef.value.validate(); // <--- 直接返回 n-form 的 validate() Promise
+const validate = () => {
+    return formRef.value.validate();
 };
-
 
 defineExpose({ validate });
 </script>
+
+<style scoped>
+.form-image-preview {
+    width: 96px;
+    height: 142px;
+    object-fit: cover;
+    border-radius: 3px;
+    background-color: #333;
+}
+</style>

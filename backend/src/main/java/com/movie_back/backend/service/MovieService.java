@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor // 使用 Lombok 自动注入 final 字段
+@RequiredArgsConstructor
 public class MovieService {
     private final MovieRepository movieRepository;
     private final ActorRepository actorRepository;
@@ -38,33 +38,29 @@ public class MovieService {
     @Transactional
     public MovieDTO createMovie(CreateMovieRequest request) {
         Movie movie = new Movie();
-        // 设置基本属性
         setMoviePropertiesFromRequest(movie, request);
         Movie savedMovie = movieRepository.save(movie);
         return convertToMovieDTO(savedMovie);
     }
 
-    // 根据ID获取电影
     @Transactional(readOnly = true)
     public MovieDTO getMovieById(Long movieId) {
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new ResourceNotFoundException("Movie not found with id: " + movieId));
+        movie.getCast().size();
+        movie.getDirectors().size();
         return convertToMovieDTO(movie);
     }
 
-    // 更新电影信息
     @Transactional
     public MovieDTO updateMovie(Long movieId, CreateMovieRequest request) {
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new ResourceNotFoundException("Movie not found with id: " + movieId));
-
-        // 更新属性
         setMoviePropertiesFromRequest(movie, request);
         Movie updatedMovie = movieRepository.save(movie);
         return convertToMovieDTO(updatedMovie);
     }
 
-    // 删除电影
     @Transactional
     public void deleteMovie(Long movieId) {
         if (!movieRepository.existsById(movieId)) {
@@ -77,37 +73,36 @@ public class MovieService {
     public void updateMovieAverageRating(Long movieId) {
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new ResourceNotFoundException("Movie not found with id: " + movieId));
-
-        // 从 UserRating 集合中计算平均分
         double average = movie.getUserRatings().stream()
                 .mapToInt(UserRating::getScore)
                 .average()
                 .orElse(0.0);
-
-        // 保留一位小数
         movie.setAverageRating(Math.round(average * 10.0) / 10.0);
         movieRepository.save(movie);
     }
 
-    // page为当前页号，size为每页包含的电影数量
-    public Page<MovieDTO> searchMovies(Integer releaseYear,
+    @Transactional(readOnly = true)
+    public Page<MovieDTO> searchMovies(
+            String title, // **新增**
+            Integer releaseYear,
             String genre, String country, Double minRating,
             String sortBy,
             String sortDir, int page, int size) {
         Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-
-        // Specification接口在 JPA 中是用来构建动态查询条件的工具
         Specification<Movie> spec = Specification.where(null);
+
+        // **新增**：按标题模糊查询的逻辑
+        if (title != null && !title.isEmpty()) {
+            spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("title")), "%" + title.toLowerCase() + "%"));
+        }
 
         if (releaseYear != null) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("releaseYear"), releaseYear));
         }
-
         if (genre != null && !genre.isEmpty()) {
             spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("genre")), "%" + genre.toLowerCase() + "%"));
         }
-
         if (country != null && !country.isEmpty()) {
             spec = spec.and((root, query, cb) -> cb.equal(cb.lower(root.get("country")), country.toLowerCase()));
         }
@@ -116,30 +111,52 @@ public class MovieService {
         }
 
         Page<Movie> moviePage = movieRepository.findAll(spec, pageable);
+
+        moviePage.getContent().forEach(movie -> {
+            movie.getCast().size();
+            movie.getDirectors().size();
+        });
+
         return moviePage.map(this::convertToMovieDTO);
     }
 
+    @Transactional(readOnly = true)
     public List<MovieDTO> getHotMovies(int limit) {
-        // 按平均分降序，取前N个
         Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "averageRating"));
-        return movieRepository.findAll(pageable).stream()
+        List<Movie> movies = movieRepository.findAll(pageable).getContent();
+        movies.forEach(movie -> {
+            movie.getCast().size();
+            movie.getDirectors().size();
+        });
+        return movies.stream()
                 .map(this::convertToMovieDTO)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<MovieDTO> getMoviesByActorName(String actorName) {
-        return movieRepository.findMoviesByActorNameContaining(actorName).stream()
+        List<Movie> movies = movieRepository.findMoviesByActorNameContaining(actorName);
+        movies.forEach(movie -> {
+            movie.getCast().size();
+            movie.getDirectors().size();
+        });
+        return movies.stream()
                 .map(this::convertToMovieDTO)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<MovieDTO> getMoviesByDirectorName(String directorName) {
-        return movieRepository.findMoviesByDirectorNameContaining(directorName).stream()
+        List<Movie> movies = movieRepository.findMoviesByDirectorNameContaining(directorName);
+        movies.forEach(movie -> {
+            movie.getCast().size();
+            movie.getDirectors().size();
+        });
+        return movies.stream()
                 .map(this::convertToMovieDTO)
                 .collect(Collectors.toList());
     }
 
-    // 抽取的公共方法，用于从请求设置电影属性
     private void setMoviePropertiesFromRequest(Movie movie, CreateMovieRequest request) {
         movie.setTitle(request.getTitle());
         movie.setReleaseYear(request.getReleaseYear());
@@ -177,14 +194,6 @@ public class MovieService {
         dto.setSynopsis(movie.getSynopsis());
         dto.setAverageRating(movie.getAverageRating());
         dto.setPosterUrl(movie.getPosterUrl());
-        // if (movie.getCast() != null) {
-        // dto.setActorNames(movie.getCast().stream().map(Actor::getName).collect(Collectors.toSet()));
-        // dto.setActorIds(movie.getCast().stream().map(Actor::getId).collect(Collectors.toSet()));
-        // }
-        // if (movie.getDirectors() != null) {
-        // dto.setDirectorNames(movie.getDirectors().stream().map(Director::getName).collect(Collectors.toSet()));
-        // dto.setDirectorIds(movie.getDirectors().stream().map(Director::getId).collect(Collectors.toSet()));
-        // }
 
         if (movie.getCast() != null) {
             dto.setCast(movie.getCast().stream()

@@ -5,7 +5,10 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reviews")
+// **核心修改 1**: 增加表注解，并定义 user_id 和 movie_id 的联合唯一约束
+@Table(name = "reviews", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "user_id", "movie_id" })
+})
 @Data
 public class Review {
     @Id
@@ -20,11 +23,10 @@ public class Review {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false) // <--- 新增
-    private Integer likes = 0; // 点赞数，可以为负
-
-    @Lob
     @Column(nullable = false)
+    private Integer likes = 0;
+
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String commentText;
 
     private LocalDateTime createdAt;

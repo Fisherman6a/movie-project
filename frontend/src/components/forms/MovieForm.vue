@@ -25,7 +25,7 @@
 
         <n-form-item label="海报" path="posterUrl">
             <n-space vertical>
-                <n-avatar v-if="model.posterUrl" :size="96" :src="model.posterUrl" object-fit="cover" />
+                <img v-if="model.posterUrl" :src="model.posterUrl" class="form-image-preview" />
                 <n-upload :custom-request="handleUpload" :show-file-list="false" :max="1" accept="image/*">
                     <n-button :loading="uploading">
                         <template #icon>
@@ -34,7 +34,6 @@
                         上传图片
                     </n-button>
                 </n-upload>
-                <n-input v-model:value="model.posterUrl" placeholder="或直接粘贴图片链接" />
             </n-space>
         </n-form-item>
 
@@ -54,8 +53,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
-import { NForm, NFormItem, NInput, NInputNumber, NSelect, NSpace, NAvatar, NUpload, NButton, NIcon, useMessage } from 'naive-ui';
+// **核心修改 1**: 引入 computed
+import { ref, onMounted, computed } from 'vue';
+import { NForm, NFormItem, NInput, NInputNumber, NSelect, NSpace, NUpload, NButton, NIcon, useMessage } from 'naive-ui';
 import { CloudUploadOutline as CloudUploadIcon } from '@vicons/ionicons5';
 import apiService from '@/services/apiService';
 import axios from 'axios';
@@ -70,8 +70,15 @@ const emit = defineEmits(['update:modelValue']);
 
 const message = useMessage();
 const formRef = ref(null);
-const model = ref({});
 const uploading = ref(false);
+
+// **核心修改 2**: 使用 computed 代替原来的 ref 和 watch
+const model = computed({
+    get: () => props.modelValue,
+    set: (value) => {
+        emit('update:modelValue', value);
+    }
+});
 
 const actorOptions = ref([]);
 const directorOptions = ref([]);
@@ -81,25 +88,22 @@ const loadingDirectors = ref(false);
 const rules = {
     title: { required: true, message: '请输入标题', trigger: 'blur' },
     releaseYear: { type: 'number', required: true, message: '请输入年份', trigger: 'blur' },
-    posterUrl: { required: true, message: '请上传或提供海报链接', trigger: 'blur' },
+    posterUrl: { required: true, message: '请上传海报', trigger: 'blur' },
 };
 
-watch(() => props.modelValue, (newValue) => {
-    model.value = { ...newValue };
-}, { immediate: true, deep: true });
-
-watch(model, (newValue) => {
-    emit('update:modelValue', newValue);
-}, { deep: true });
+// **核心修改 3**: 移除两个导致无限循环的 watch
+// watch(() => props.modelValue, ...);
+// watch(model, ...);
 
 const handleUpload = async ({ file, onFinish, onError }) => {
     uploading.value = true;
     const formData = new FormData();
     formData.append("image", file.file);
-    formData.append("key", "4312ec520960fe609d17eb3f8a99ca5e"); // 你的 ImgBB API Key
+    formData.append("key", "4312ec520960fe609d17eb3f8a99ca5e");
 
     try {
         const response = await axios.post("https://api.imgbb.com/1/upload", formData);
+        // 注意：直接修改 model.value 会触发 computed 的 set 方法
         model.value.posterUrl = response.data.data.url;
         message.success("上传成功！");
         onFinish();
@@ -130,9 +134,19 @@ onMounted(async () => {
     }
 });
 
-const validate = () => { // <--- 移除 callback 参数
-    return formRef.value.validate(); // <--- 直接返回 n-form 的 validate() Promise
+const validate = () => {
+    return formRef.value.validate();
 };
 
 defineExpose({ validate });
 </script>
+
+<style scoped>
+.form-image-preview {
+    width: 96px;
+    height: 142px;
+    object-fit: cover;
+    border-radius: 3px;
+    background-color: #333;
+}
+</style>

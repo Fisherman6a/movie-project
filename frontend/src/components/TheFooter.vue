@@ -57,10 +57,11 @@
 
 <style scoped>
 .site-footer {
+  /* **核心修改**: 增加顶部外边距，与页面内容隔开 */
+  margin-top: 30px;
+
   background-color: #18181c;
-  /* 使用 Naive UI 的深色背景 */
   color: rgba(255, 255, 255, 0.52);
-  /* 柔和的文字颜色 */
   padding: 40px 0;
   font-size: 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.09);
@@ -129,7 +130,6 @@
 
 .footer-social-icons a:hover {
   background-color: #36ad6a;
-  /* Naive UI 的主色调 */
   text-decoration: none;
 }
 

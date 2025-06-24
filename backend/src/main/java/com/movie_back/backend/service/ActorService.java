@@ -5,7 +5,7 @@ import com.movie_back.backend.entity.Actor;
 import com.movie_back.backend.exception.ResourceNotFoundException;
 import com.movie_back.backend.repository.ActorRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value; // 引入 @Value
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,11 +24,13 @@ public class ActorService {
     @Transactional
     public ActorDTO createActor(ActorDTO actorDTO) {
         Actor actor = new Actor();
+        // **核心修改**: 直接使用枚举类型进行赋值
         actor.setName(actorDTO.getName());
         actor.setGender(actorDTO.getGender());
         actor.setBirthDate(actorDTO.getBirthDate());
         actor.setNationality(actorDTO.getNationality());
         actor.setProfileImageUrl(actorDTO.getProfileImageUrl());
+        actor.setBiography(actorDTO.getBiography());
         Actor savedActor = actorRepository.save(actor);
         return convertToDTO(savedActor);
     }
@@ -45,16 +47,25 @@ public class ActorService {
         return actorRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<ActorDTO> searchActorsByName(String name) {
+        return actorRepository.findByNameContainingIgnoreCase(name).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public ActorDTO updateActor(Long id, ActorDTO actorDetails) {
         Actor actor = actorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Actor not found with id: " + id));
 
+        // **核心修改**: 直接使用枚举类型进行赋值
         actor.setName(actorDetails.getName());
         actor.setGender(actorDetails.getGender());
         actor.setBirthDate(actorDetails.getBirthDate());
         actor.setNationality(actorDetails.getNationality());
         actor.setProfileImageUrl(actorDetails.getProfileImageUrl());
+        actor.setBiography(actorDetails.getBiography());
 
         Actor updatedActor = actorRepository.save(actor);
         return convertToDTO(updatedActor);
@@ -70,12 +81,14 @@ public class ActorService {
 
     private ActorDTO convertToDTO(Actor actor) {
         ActorDTO dto = new ActorDTO();
+        // **核心修改**: 直接使用枚举类型进行赋值
         dto.setId(actor.getId());
         dto.setName(actor.getName());
         dto.setGender(actor.getGender());
         dto.setBirthDate(actor.getBirthDate());
         dto.setNationality(actor.getNationality());
-        dto.setProfileImageUrl(actor.getProfileImageUrl());
+        dto.setBiography(actor.getBiography());
+
         if (actor.getProfileImageUrl() == null || actor.getProfileImageUrl().isEmpty()) {
             dto.setProfileImageUrl(defaultPersonImageUrl);
         } else {

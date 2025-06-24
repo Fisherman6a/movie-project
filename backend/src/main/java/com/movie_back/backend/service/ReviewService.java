@@ -2,6 +2,7 @@ package com.movie_back.backend.service;
 
 import com.movie_back.backend.dto.review.ReviewDTO;
 import com.movie_back.backend.dto.review.ReviewRequest;
+import com.movie_back.backend.dto.userRating.UserRatingRequest;
 import com.movie_back.backend.entity.Movie;
 import com.movie_back.backend.entity.Review;
 import com.movie_back.backend.entity.User;
@@ -26,13 +27,16 @@ public class ReviewService {
     private final MovieRepository movieRepository;
     private final UserRepository userRepository;
     private final UserRatingRepository userRatingRepository;
+    private final UserRatingService userRatingService;
 
     public ReviewService(ReviewRepository reviewRepository, MovieRepository movieRepository,
-            UserRepository userRepository, UserRatingRepository userRatingRepository) {
+            UserRepository userRepository, UserRatingRepository userRatingRepository,
+            UserRatingService userRatingService) {
         this.reviewRepository = reviewRepository;
         this.movieRepository = movieRepository;
         this.userRepository = userRepository;
         this.userRatingRepository = userRatingRepository;
+        this.userRatingService = userRatingService;
     }
 
     // 获取所有评论
@@ -47,8 +51,8 @@ public class ReviewService {
 
     /**
      * 获取特定电影的所有评论。
+     * * @param movieId 电影的 ID。
      * 
-     * @param movieId 电影的 ID。
      * @return 评论 DTO 的列表。
      */
     @Transactional(readOnly = true)
@@ -61,8 +65,8 @@ public class ReviewService {
 
     /**
      * 获取特定用户的所有评论。
+     * * @param userId 用户的 ID。
      * 
-     * @param userId 用户的 ID。
      * @return 评论 DTO 的列表。
      */
     @Transactional(readOnly = true)
@@ -77,16 +81,26 @@ public class ReviewService {
     }
 
     /**
-     * 为电影添加一条新评论。
+     * 为电影添加一条新评论，并同时处理评分。
+     * * @param movieId 被评论的电影 ID。
      * 
-     * @param movieId       被评论的电影 ID。
      * @param userId        发表评论的用户 ID。
-     * @param reviewRequest 评论内容。
+     * @param reviewRequest 包含评论内容和评分的数据。
      * @return 已创建评论的 DTO。
      */
     @Transactional
     public ReviewDTO addReview(Long movieId, Long userId, ReviewRequest reviewRequest) {
-        // 从数据库中查找电影和用户实体。
+        // 检查用户是否已经对该电影发表过评论
+        if (reviewRepository.findByMovieIdAndUserId(movieId, userId).isPresent()) {
+            throw new IllegalStateException("User has already reviewed this movie.");
+        }
+
+        // 1. 调用 UserRatingService 来添加或更新评分
+        UserRatingRequest ratingRequest = new UserRatingRequest();
+        ratingRequest.setScore(reviewRequest.getScore());
+        userRatingService.addOrUpdateRating(movieId, userId, ratingRequest);
+
+        // 2. 创建文字评论记录
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new ResourceNotFoundException("未找到 ID 为 " + movieId + " 的电影"));
         User user = userRepository.findById(userId)
@@ -124,8 +138,7 @@ public class ReviewService {
 
     /**
      * 根据 ID 删除一条评论。
-     * 
-     * @param reviewId 要删除的评论 ID。
+     * * @param reviewId 要删除的评论 ID。
      */
     @Transactional
     public void deleteReview(Long reviewId) {
@@ -137,8 +150,8 @@ public class ReviewService {
 
     /**
      * 将 Review 实体转换为其 DTO 表现形式。
+     * * @param review Review 实体。
      * 
-     * @param review Review 实体。
      * @return 对应的 ReviewDTO。
      */
     private ReviewDTO convertToReviewDTO(Review review) {
@@ -151,18 +164,16 @@ public class ReviewService {
         dto.setMovieTitle(review.getMovie().getTitle());
         dto.setUserId(review.getUser().getId());
         dto.setUsername(review.getUser().getUsername());
+        dto.setUserProfileImageUrl(review.getUser().getProfileImageUrl());
         dto.setLikes(review.getLikes());
 
-        // ========== START: 新增逻辑，查找并设置评分 ==========
         Optional<UserRating> userRatingOpt = userRatingRepository
                 .findByMovieIdAndUserId(review.getMovie().getId(), review.getUser().getId());
         userRatingOpt.ifPresent(userRating -> dto.setScore(userRating.getScore()));
-        // ========== END: 新增逻辑 ==========
 
         return dto;
     }
 
-    // ========== START: 新增点赞/点踩服务逻辑 ==========
     @Transactional
     public ReviewDTO voteOnReview(Long reviewId, String direction) {
         Review review = reviewRepository.findById(reviewId)

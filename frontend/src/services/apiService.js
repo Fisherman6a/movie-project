@@ -1,15 +1,13 @@
 import axios from 'axios';
 import { useAuthStore } from '@/stores/authStore';
 
-// 创建一个 Axios 实例
 const apiClient = axios.create({
-    baseURL: 'http://localhost:7070/api', // 您的后端 API 地址
+    baseURL: 'http://localhost:7070/api',
     headers: {
         'Content-Type': 'application/json'
     }
 });
 
-// 添加一个请求拦截器，用于在每个请求的 header 中附加 Token
 apiClient.interceptors.request.use(config => {
     const authStore = useAuthStore();
     const token = authStore.token;
@@ -22,7 +20,6 @@ apiClient.interceptors.request.use(config => {
 });
 
 export default {
-    // 认证相关
     login(credentials) {
         return apiClient.post('/auth/login', credentials);
     },
@@ -30,20 +27,19 @@ export default {
         return apiClient.post('/auth/register', userInfo);
     },
 
-    // 电影相关
     getHotMovies(limit = 10) {
         return apiClient.get(`/movies/hot?limit=${limit}`);
     },
-    // 新增：获取最新电影的接口
     getLatestMovies(limit = 10) {
-        // 假设后端通过 sortBy=releaseYear&sortDir=desc 来实现
         return apiClient.get(`/movies/search?sortBy=releaseYear&sortDir=desc&size=${limit}`);
     },
     searchMovies(params) {
-        // params 可以是 { name: 'keyword' }
         return apiClient.get(`/movies/${params.type}?name=${params.name}`);
     },
-    // 电影管理api
+    // **新增**: 按标题搜索电影
+    searchMoviesByTitle(title) {
+        return apiClient.get(`/movies/search?title=${encodeURIComponent(title)}`);
+    },
     getMovieById(id) {
         return apiClient.get(`/movies/${id}`);
     },
@@ -56,13 +52,16 @@ export default {
     deleteMovie(id) {
         return apiClient.delete(`/movies/${id}`);
     },
-    getAllMovies() { // 用于在表单中选择电影
-        return apiClient.get('/movies/search?size=1000'); // 获取足够多的电影
+    getAllMovies() {
+        return apiClient.get('/movies/search?size=1000');
     },
 
-    // 演员管理API
+    // 演员api
     getAllActors() {
         return apiClient.get('/actors');
+    },
+    getActorById(id) {
+        return apiClient.get(`/actors/${id}`);
     },
     createActor(data) {
         return apiClient.post('/actors', data);
@@ -73,10 +72,16 @@ export default {
     deleteActor(id) {
         return apiClient.delete(`/actors/${id}`);
     },
+    searchActors(name) {
+        return apiClient.get(`/actors/search?name=${encodeURIComponent(name)}`);
+    },
 
     // 导演管理api
     getAllDirectors() {
         return apiClient.get('/directors');
+    },
+    getDirectorById(id) {
+        return apiClient.get(`/directors/${id}`);
     },
     createDirector(data) {
         return apiClient.post('/directors', data);
@@ -87,8 +92,10 @@ export default {
     deleteDirector(id) {
         return apiClient.delete(`/directors/${id}`);
     },
+    searchDirectors(name) {
+        return apiClient.get(`/directors/search?name=${encodeURIComponent(name)}`);
+    },
 
-    // 评论相关
     getAllReviews() {
         return apiClient.get('/reviews');
     },
@@ -98,42 +105,27 @@ export default {
     getReviewsByUserId(userId) {
         return apiClient.get(`/users/${userId}/reviews`);
     },
-    addReview(movieId, userId, commentText) {
-        return apiClient.post(`/movies/${movieId}/reviews?userId=${userId}`, { commentText });
+    addReview(movieId, userId, score, commentText) {
+        return apiClient.post(`/movies/${movieId}/reviews?userId=${userId}`, { score: score * 2, commentText });
     },
-    updateReview(reviewId, commentText) {
-        return apiClient.put(`/reviews/${reviewId}`, { commentText });
+    updateReview(reviewId, data) {
+        return apiClient.put(`/reviews/${reviewId}`, data);
     },
     deleteReview(reviewId) {
         return apiClient.delete(`/reviews/${reviewId}`);
     },
     voteOnReview(reviewId, direction) {
-        // direction 应该是 'up' 或 'down'
         return apiClient.post(`/reviews/${reviewId}/vote`, { direction });
     },
-
-    // 评分相关
     rateMovie(movieId, userId, score) {
         return apiClient.post(`/movies/${movieId}/ratings?userId=${userId}`, { score });
     },
-    // 新增用户相关接口
-    sendEmailVerificationCode(data) {
-        return axios.post('/api/send-email-code', data); // 替换为你的后端接口
-    },
-    sendPhoneVerificationCode(data) {
-        return axios.post('/api/send-phone-code', data); // 替换为你的后端接口
-    },
-    changeEmail(data) {
-        return axios.post('/api/change-email', data); // 替换为你的后端接口
-    },
-    changePhone(data) {
-        return axios.post('/api/change-phone', data); // 替换为你的后端接口
-    },
+
     updateUserProfile(data) {
-        return axios.put('/api/user/profile', data);
+        // 注意：这里的apiClient实例会自动附加token，比直接用axios好
+        return apiClient.put('/users/me', data);
     },
 
-    //用户管理api
     getAllUsers() {
         return apiClient.get('/users');
     },

@@ -137,13 +137,17 @@ const handleOpenModal = (type, mode, item = {}) => {
     modalMode.value = mode;
     if (type === 'movie' && mode === 'edit') {
         formData.value = {
-            ...item,
-            actorIds: item.actorIds,
-            directorIds: item.directorIds
+            ...item, // 复制电影的其他所有信息
+            // 检查 cast 数组是否存在，如果存在，则 map 出所有演员的 id
+            actorIds: item.cast ? item.cast.map(person => person.id) : [],
+            // 检查 directors 数组是否存在，如果存在，则 map 出所有导演的 id
+            directorIds: item.directors ? item.directors.map(person => person.id) : [],
         };
     } else {
+        // 对于新增电影或编辑/新增其他实体，保持原样
         formData.value = { ...item };
     }
+
     modalTitle.value = `${mode === 'create' ? '新增' : '编辑'} ${{ movie: '电影', actor: '演员', director: '导演' }[type]}`;
     showModal.value = true;
 };

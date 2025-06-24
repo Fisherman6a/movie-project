@@ -17,21 +17,26 @@ import java.util.Set;
 public class Actor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // ActorID
+    private Long id;
 
     @Column(length = 100, nullable = false)
-    private String name; // 姓名
+    private String name;
 
+    // **核心修改**: 类型从 String 改为 Gender 枚举
+    @Enumerated(EnumType.STRING)
     @Column(length = 20)
-    private String gender; // 性别 (如: "Male", "Female", "Other")
+    private Gender gender;
 
-    private LocalDate birthDate; // 出生日期
+    private LocalDate birthDate;
 
     @Column(length = 100)
-    private String nationality; // 国籍
+    private String nationality;
 
     @Column(length = 2048)
-    private String profileImageUrl; // 演员图片URL
+    private String profileImageUrl;
+
+    @Column(columnDefinition = "TEXT")
+    private String biography;
 
     @ManyToMany(mappedBy = "cast", fetch = FetchType.LAZY)
     private Set<Movie> moviesActedIn = new HashSet<>();

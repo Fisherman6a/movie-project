@@ -31,6 +31,12 @@ public class ActorController {
         return ResponseEntity.ok(actorService.getAllActors());
     }
 
+    // 新增：按姓名搜索演员 - 公开
+    @GetMapping("/search")
+    public ResponseEntity<List<ActorDTO>> searchActors(@RequestParam String name) {
+        return ResponseEntity.ok(actorService.searchActorsByName(name));
+    }
+
     // 获取单个演员信息 - 公开
     @GetMapping("/{id}")
     public ResponseEntity<ActorDTO> getActorById(@PathVariable Long id) {

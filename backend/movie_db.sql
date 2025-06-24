@@ -498,3 +498,17 @@ VALUES
         NOW(),
         99
     );
+
+-- 标准化 actors 表中的性别数据
+UPDATE actors SET gender = 'MALE' WHERE gender = 'Male';
+
+UPDATE actors SET gender = 'FEMALE' WHERE gender = 'Female';
+
+UPDATE actors SET gender = 'OTHER' WHERE gender = 'Other';
+
+-- 标准化 directors 表中的性别数据
+UPDATE directors SET gender = 'MALE' WHERE gender = 'Male';
+
+UPDATE directors SET gender = 'FEMALE' WHERE gender = 'Female';
+
+UPDATE directors SET gender = 'OTHER' WHERE gender = 'Other';

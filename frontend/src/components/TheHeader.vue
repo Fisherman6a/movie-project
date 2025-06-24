@@ -29,6 +29,8 @@
       </n-space>
     </n-flex>
   </n-layout-header>
+  <div style="margin-top: 20px;">
+  </div>
 </template>
 
 <script setup>
@@ -123,6 +125,7 @@ const handleDropdownSelect = (key) => {
 a {
   text-decoration: none;
 }
+
 .n-avatar {
   cursor: pointer;
 }

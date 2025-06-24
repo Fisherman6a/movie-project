@@ -1,73 +1,99 @@
 <template>
-  <n-layout-content content-style="padding: 24px;">
-    <n-h2>
-      搜索“<n-text type="primary">{{ keyword }}</n-text>”的结果
-    </n-h2>
+  <div>
+    <n-flex justify="space-between" align="center">
+      <n-h2 style="margin: 0;">
+        搜索“<n-text type="primary">{{ keyword }}</n-text>”的结果
+      </n-h2>
+      <router-link :to="{ name: 'PersonSearch', query: { keyword: keyword } }" class="more-link">
+        > 搜索更多叫“{{ keyword }}”的影人
+      </router-link>
+    </n-flex>
 
-    <n-spin :show="searchStore.isLoading">
-      <n-grid v-if="movies.length > 0" :x-gap="16" :y-gap="24" :cols="'2 s:3 m:4 l:5 xl:6'" responsive="true">
-        <n-grid-item v-for="movie in movies" :key="movie.id">
-          <router-link :to="{ name: 'MovieDetail', params: { id: movie.id } }">
-            <n-card :title="movie.title" hoverable content-style="padding:0;">
-              <template #cover>
-                <img :src="movie.posterUrl" class="movie-poster-img">
-              </template>
-            </n-card>
-          </router-link>
-        </n-grid-item>
-      </n-grid>
-      <n-empty v-else description="没有找到相关的电影。">
+    <n-spin :show="isLoading" style="margin-top: 20px;">
+      <div v-if="moviesByTitle.length > 0" class="results-category">
+        <n-h3 prefix="bar" type="info">相关电影</n-h3>
+        <n-grid :x-gap="16" :y-gap="24" :cols="'2 s:3 m:4 l:5 xl:6'" responsive="true">
+          <n-grid-item v-for="movie in moviesByTitle" :key="movie.id">
+            <router-link :to="{ name: 'MovieDetail', params: { id: movie.id } }">
+              <n-card :title="movie.title" hoverable content-style="padding:0;">
+                <template #cover>
+                  <img :src="movie.posterUrl" class="movie-poster-img">
+                </template>
+              </n-card>
+            </router-link>
+          </n-grid-item>
+        </n-grid>
+      </div>
+      <div v-if="moviesByPerson.length > 0" class="results-category">
+        <n-h3 prefix="bar" type="success">影人 “{{ keyword }}” 的相关作品</n-h3>
+        <n-grid :x-gap="16" :y-gap="24" :cols="'2 s:3 m:4 l:5 xl:6'" responsive="true">
+          <n-grid-item v-for="movie in moviesByPerson" :key="movie.id">
+            <router-link :to="{ name: 'MovieDetail', params: { id: movie.id } }">
+              <n-card :title="movie.title" hoverable content-style="padding:0;">
+                <template #cover>
+                  <img :src="movie.posterUrl" class="movie-poster-img">
+                </template>
+              </n-card>
+            </router-link>
+          </n-grid-item>
+        </n-grid>
+      </div>
+      <n-empty v-if="!isLoading && moviesByTitle.length === 0 && moviesByPerson.length === 0"
+        description="没有找到相关的电影或影人。">
       </n-empty>
     </n-spin>
-
-  </n-layout-content>
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
+import { useMessage, NSpin, NH2, NH3, NText, NGrid, NGridItem, NCard, NEmpty, NFlex } from 'naive-ui';
 import apiService from '@/services/apiService';
-import { NLayoutContent, NH2, NText, NSpin, NGrid, NGridItem, NCard, NEmpty } from 'naive-ui';
 
-// 1. 引入我们新创建的 store
-import { useSearchStore } from '@/stores/searchStore';
-
+// ... script 部分无需修改，保持原样即可 ...
 const props = defineProps({
   keyword: String,
 });
 
-const movies = ref([]);
-// 2. 移除此组件内部的 loading 状态，因为它现在由 store 统一管理
-// const loading = ref(false); 
+const message = useMessage();
+const isLoading = ref(false);
 
-// 3. 初始化 store
-const searchStore = useSearchStore();
+const moviesByTitle = ref([]);
+const moviesByPerson = ref([]);
 
-const fetchMovies = async (name) => {
+const performSearch = async (name) => {
   if (!name) return;
 
-  // 4. 开始获取数据前，调用 store 的方法，将全局加载状态设为 true
-  searchStore.startLoading();
-  try {
-    const actorRes = await apiService.searchMovies({ type: 'by-actor', name });
-    const directorRes = await apiService.searchMovies({ type: 'by-director', name });
+  isLoading.value = true;
+  moviesByTitle.value = [];
+  moviesByPerson.value = [];
 
-    const allMovies = [...actorRes.data, ...directorRes.data];
-    movies.value = Array.from(new Map(allMovies.map(m => [m.id, m])).values());
+  try {
+    const [titleRes, actorRes, directorRes] = await Promise.all([
+      apiService.searchMoviesByTitle(name),
+      apiService.searchMovies({ type: 'by-actor', name }),
+      apiService.searchMovies({ type: 'by-director', name }),
+    ]);
+
+    moviesByTitle.value = titleRes.data.content || [];
+
+    const personMovies = [...actorRes.data, ...directorRes.data];
+    moviesByPerson.value = Array.from(new Map(personMovies.map(m => [m.id, m])).values());
 
   } catch (error) {
+    message.error('搜索时出错，请稍后重试。');
     console.error('搜索电影时出错:', error);
   } finally {
-    // 5. 不论成功或失败，获取数据结束后，都调用 store 的方法，将全局加载状态设为 false
-    searchStore.stopLoading();
+    isLoading.value = false;
   }
 };
 
 onMounted(() => {
-  fetchMovies(props.keyword);
+  performSearch(props.keyword);
 });
 
 watch(() => props.keyword, (newKeyword) => {
-  fetchMovies(newKeyword);
+  performSearch(newKeyword);
 });
 </script>
 
@@ -87,5 +113,20 @@ watch(() => props.keyword, (newKeyword) => {
 a {
   text-decoration: none;
   color: inherit;
+}
+
+.results-category {
+  margin-bottom: 40px;
+}
+
+/* 新增：右上角链接样式 */
+.more-link {
+  font-size: 14px;
+  color: #63e2b7;
+  cursor: pointer;
+}
+
+.more-link:hover {
+  text-decoration: underline;
 }
 </style>

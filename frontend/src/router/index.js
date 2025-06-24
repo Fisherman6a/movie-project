@@ -10,7 +10,6 @@ const routes = [
         name: 'Home',
         component: HomePage,
     },
-    // ... 其他路由保持不变 ...
     {
         path: '/login',
         name: 'LoginView',
@@ -60,16 +59,28 @@ const routes = [
         props: (route) => ({ query: route.query })
     },
     {
-        path: '/person/:id', // 使用动态参数 id
-        name: 'PersonDetail',
+        path: '/search/person',
+        name: 'PersonSearch',
+        component: () => import('@/views/PersonSearch.vue'),
+        props: route => ({ keyword: route.query.keyword })
+    },
+    {
+        path: '/actor/:id',
+        name: 'ActorDetail', // 新路由名
         component: () => import('@/views/PersonDetail.vue'),
-        props: true // 将路由参数作为 props 传递给组件
+        props: true
+    },
+    {
+        path: '/director/:id',
+        name: 'DirectorDetail', // 新路由名
+        component: () => import('@/views/PersonDetail.vue'),
+        props: true
     },
     {
         path: '/admin',
         name: 'AdminDashboard',
         component: () => import('@/views/AdminDashboard.vue'),
-        meta: { requiresAuth: true, requiresAdmin: true } // 需要登录且需要是管理员
+        meta: { requiresAuth: true, requiresAdmin: true }
     },
 ];
 
@@ -78,29 +89,21 @@ const router = createRouter({
     routes,
 });
 
-// ========== START: 修改全局前置守卫 ==========
 router.beforeEach((to, from, next) => {
     const authStore = useAuthStore();
-
-    // 检查是否需要管理员权限
     if (to.meta.requiresAdmin) {
         if (authStore.isAuthenticated && authStore.user.role === 'ROLE_ADMIN') {
-            next(); // 是管理员，放行
+            next();
         } else {
-            // 不是管理员，重定向到首页或显示无权限页面
-            // 为简单起见，我们重定向到首页
             next({ name: 'Home' });
         }
     }
-    // 检查是否需要普通登录权限
     else if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-        next({ name: 'LoginView' }); // 未登录，跳转到登录页
+        next({ name: 'LoginView' });
     }
-    // 其他情况
     else {
-        next(); // 不需要任何权限，或已满足普通登录权限，直接放行
+        next();
     }
 });
-// ========== END: 修改全局前置守卫 ==========
 
 export default router;
