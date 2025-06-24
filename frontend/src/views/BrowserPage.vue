@@ -131,9 +131,9 @@ const countryTags = [
 ];
 const yearTags = [
   { label: "全部", value: null },
-  { label: "2024", value: 2024 },
-  { label: "2023", value: 2023 },
-  { label: "2022", value: 2022 },
+  { label: "2024", value: "2024" },
+  { label: "2023", value: "2023" },
+  { label: "2022", value: "2022" },
   { label: "2010年代", value: "2010s" },
   { label: "2000年代", value: "2000s" },
 ];

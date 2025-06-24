@@ -19,9 +19,10 @@ public class Actor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // ActorID
 
-    @Column(nullable = false)
+    @Column(length = 100, nullable = false)
     private String name; // 姓名
 
+    @Column(length = 20)
     private String gender; // 性别 (如: "Male", "Female", "Other")
 
     private LocalDate birthDate; // 出生日期

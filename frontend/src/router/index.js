@@ -10,17 +10,16 @@ const routes = [
         name: 'Home',
         component: HomePage,
     },
+    // ... 其他路由保持不变 ...
     {
         path: '/login',
         name: 'LoginView',
-        // 确保这里指向的是 AuthView.vue
         component: () => import('@/views/AuthView.vue'),
         props: { defaultTab: 'signin' }
     },
     {
         path: '/register',
         name: 'RegisterView',
-        // 确保这里也指向的是 AuthView.vue
         component: () => import('@/views/AuthView.vue'),
         props: { defaultTab: 'signup' }
     },
@@ -58,8 +57,13 @@ const routes = [
         path: '/browser',
         name: 'BrowserPage',
         component: () => import('@/views/BrowserPage.vue'),
-        // props 设置为 true 可以让组件通过 props 接收路由参数
         props: (route) => ({ query: route.query })
+    },
+    {
+        path: '/admin',
+        name: 'AdminDashboard',
+        component: () => import('@/views/AdminDashboard.vue'),
+        meta: { requiresAuth: true, requiresAdmin: true } // 需要登录且需要是管理员
     },
 ];
 
@@ -68,14 +72,29 @@ const router = createRouter({
     routes,
 });
 
-// 全局前置守卫 (保持不变)
+// ========== START: 修改全局前置守卫 ==========
 router.beforeEach((to, from, next) => {
     const authStore = useAuthStore();
-    if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-        next({ name: 'LoginView' });
-    } else {
-        next();
+
+    // 检查是否需要管理员权限
+    if (to.meta.requiresAdmin) {
+        if (authStore.isAuthenticated && authStore.user.role === 'ROLE_ADMIN') {
+            next(); // 是管理员，放行
+        } else {
+            // 不是管理员，重定向到首页或显示无权限页面
+            // 为简单起见，我们重定向到首页
+            next({ name: 'Home' });
+        }
+    }
+    // 检查是否需要普通登录权限
+    else if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+        next({ name: 'LoginView' }); // 未登录，跳转到登录页
+    }
+    // 其他情况
+    else {
+        next(); // 不需要任何权限，或已满足普通登录权限，直接放行
     }
 });
+// ========== END: 修改全局前置守卫 ==========
 
 export default router;

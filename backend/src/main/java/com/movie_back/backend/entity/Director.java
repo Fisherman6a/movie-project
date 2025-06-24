@@ -19,15 +19,18 @@ public class Director {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // DirectorID
 
-    @Column(nullable = false)
+    @Column(length = 100, nullable = false)
     private String name; // 姓名
 
+    @Column(length = 20)
     private String gender; // 性别
 
     private LocalDate birthDate; // 出生日期
 
+    @Column(length = 100)
     private String nationality; // 国籍
 
+    @Column(length = 2048)
     private String profileImageUrl; // 导演图片URL
 
     @ManyToMany(mappedBy = "directors", fetch = FetchType.LAZY)

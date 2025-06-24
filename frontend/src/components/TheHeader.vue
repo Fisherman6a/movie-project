@@ -22,6 +22,7 @@
           </n-avatar>
         </router-link>
 
+        <!-- 使用计算属性 dropdownOptions -->
         <n-dropdown v-else :options="dropdownOptions" @select="handleDropdownSelect">
           <n-avatar round :src="authStore.profileImageUrl" />
         </n-dropdown>
@@ -31,7 +32,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+// ========== START: Import 'computed' ==========
+import { ref, computed } from 'vue';
+// ========== END: Import 'computed' ==========
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { useSearchStore } from '@/stores/searchStore';
@@ -43,33 +46,47 @@ const authStore = useAuthStore();
 const searchTerm = ref('');
 const searchStore = useSearchStore();
 
-const dropdownOptions = ref([
-  // 新增 “我的主页”
-  {
-    label: '我的主页',
-    key: 'profile'
-  },
-  {
-    label: '我的评论',
-    key: 'my-reviews'
-  },
-  {
-    label: '账号设置',
-    key: 'settings'
-  },
-  {
-    type: 'divider',
-    key: 'd1'
-  },
-  {
+// ========== START: Convert dropdownOptions to a computed property ==========
+const dropdownOptions = computed(() => {
+  const options = [
+    {
+      label: '我的主页',
+      key: 'profile'
+    },
+    {
+      label: '我的评论',
+      key: 'my-reviews'
+    },
+    {
+      label: '账号设置',
+      key: 'settings'
+    },
+    {
+      type: 'divider',
+      key: 'd1'
+    }
+  ];
+
+  // 如果是管理员，添加管理后台入口
+  if (authStore.user && authStore.user.role === 'ROLE_ADMIN') {
+    options.push({
+      label: '管理后台',
+      key: 'admin-dashboard'
+    });
+  }
+
+  options.push({
     label: '登出',
     key: 'logout'
-  }
-]);
+  });
+
+  return options;
+});
+// ========== END: Convert dropdownOptions to a computed property ==========
+
 
 const handleSearch = () => {
   if (searchTerm.value.trim()) {
-    // 页面跳转到关键词搜索页面
     router.push({ name: 'MovieSearch', query: { keyword: searchTerm.value.trim() } });
     searchTerm.value = '';
   }
@@ -92,20 +109,20 @@ const handleDropdownSelect = (key) => {
     case 'my-reviews':
       router.push('/my-reviews');
       break;
+    case 'admin-dashboard':
+      router.push('/admin');
+      break;
     case 'logout':
       handleLogout();
       break;
   }
 };
-
 </script>
 
 <style scoped>
 a {
   text-decoration: none;
 }
-
-/* Make the avatar clickable */
 .n-avatar {
   cursor: pointer;
 }

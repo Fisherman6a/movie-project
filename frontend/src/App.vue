@@ -34,7 +34,7 @@ body {
 /* 新增的容器样式 */
 .main-content-container {
   /* 设置内容区域的最大宽度 */
-  max-width: 1400px;
+  max-width: 1200px;
   /* 使用 margin: 0 auto; 实现水平居中 */
   margin: 0 auto;
   /* 确保在小屏幕上也能正常显示，并有一定边距 */
