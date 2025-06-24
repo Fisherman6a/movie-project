@@ -5,14 +5,18 @@ import com.movie_back.backend.dto.review.ReviewRequest;
 import com.movie_back.backend.entity.Movie;
 import com.movie_back.backend.entity.Review;
 import com.movie_back.backend.entity.User;
+import com.movie_back.backend.entity.UserRating;
 import com.movie_back.backend.exception.ResourceNotFoundException;
 import com.movie_back.backend.repository.MovieRepository;
 import com.movie_back.backend.repository.ReviewRepository;
+import com.movie_back.backend.repository.UserRatingRepository;
 import com.movie_back.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,12 +25,24 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final MovieRepository movieRepository;
     private final UserRepository userRepository;
+    private final UserRatingRepository userRatingRepository;
 
     public ReviewService(ReviewRepository reviewRepository, MovieRepository movieRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository, UserRatingRepository userRatingRepository) {
         this.reviewRepository = reviewRepository;
         this.movieRepository = movieRepository;
         this.userRepository = userRepository;
+        this.userRatingRepository = userRatingRepository;
+    }
+
+    // 获取所有评论
+    @Transactional(readOnly = true)
+    public List<ReviewDTO> getAllReviews() {
+        return reviewRepository.findAll().stream()
+                .map(this::convertToReviewDTO)
+                // 按创建时间降序排序
+                .sorted(Comparator.comparing(ReviewDTO::getCreatedAt).reversed())
+                .collect(Collectors.toList());
     }
 
     /**
@@ -135,6 +151,13 @@ public class ReviewService {
         dto.setMovieTitle(review.getMovie().getTitle());
         dto.setUserId(review.getUser().getId());
         dto.setUsername(review.getUser().getUsername());
+
+        // ========== START: 新增逻辑，查找并设置评分 ==========
+        Optional<UserRating> userRatingOpt = userRatingRepository
+                .findByMovieIdAndUserId(review.getMovie().getId(), review.getUser().getId());
+        userRatingOpt.ifPresent(userRating -> dto.setScore(userRating.getScore()));
+        // ========== END: 新增逻辑 ==========
+
         return dto;
     }
 }

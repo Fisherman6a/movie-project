@@ -43,11 +43,55 @@ export default {
         // params 可以是 { name: 'keyword' }
         return apiClient.get(`/movies/${params.type}?name=${params.name}`);
     },
+    // 电影管理api
     getMovieById(id) {
         return apiClient.get(`/movies/${id}`);
     },
+    createMovie(data) {
+        return apiClient.post('/movies', data);
+    },
+    updateMovie(id, data) {
+        return apiClient.put(`/movies/${id}`, data);
+    },
+    deleteMovie(id) {
+        return apiClient.delete(`/movies/${id}`);
+    },
+    getAllMovies() { // 用于在表单中选择电影
+        return apiClient.get('/movies/search?size=1000'); // 获取足够多的电影
+    },
+
+    // 演员管理API
+    getAllActors() {
+        return apiClient.get('/actors');
+    },
+    createActor(data) {
+        return apiClient.post('/actors', data);
+    },
+    updateActor(id, data) {
+        return apiClient.put(`/actors/${id}`, data);
+    },
+    deleteActor(id) {
+        return apiClient.delete(`/actors/${id}`);
+    },
+
+    // 导演管理api
+    getAllDirectors() {
+        return apiClient.get('/directors');
+    },
+    createDirector(data) {
+        return apiClient.post('/directors', data);
+    },
+    updateDirector(id, data) {
+        return apiClient.put(`/directors/${id}`, data);
+    },
+    deleteDirector(id) {
+        return apiClient.delete(`/directors/${id}`);
+    },
 
     // 评论相关
+    getAllReviews() {
+        return apiClient.get('/reviews');
+    },
     getReviewsForMovie(movieId) {
         return apiClient.get(`/movies/${movieId}/reviews`);
     },
@@ -83,5 +127,13 @@ export default {
     },
     updateUserProfile(data) {
         return axios.put('/api/user/profile', data);
+    },
+
+    //用户管理api
+    getAllUsers() {
+        return apiClient.get('/users');
+    },
+    deleteUser(id) {
+        return apiClient.delete(`/users/${id}`);
     },
 };

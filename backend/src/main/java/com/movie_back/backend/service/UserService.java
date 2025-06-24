@@ -7,6 +7,10 @@ import com.movie_back.backend.entity.Role;
 import com.movie_back.backend.entity.User;
 import com.movie_back.backend.exception.ResourceNotFoundException;
 import com.movie_back.backend.repository.UserRepository;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
 // import lombok.RequiredArgsConstructor; // 移除这行
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -102,4 +106,22 @@ public class UserService implements UserDetailsService {
         return dto;
     }
 
+    @Transactional(readOnly = true)
+    public List<UserDTO> findAllUsers() {
+        return userRepository.findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void deleteUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        // 防止管理员删除自己
+        // (更复杂的逻辑可以检查当前登录的管理员ID是否与要删除的ID相同)
+        if (user.getRole() == Role.ROLE_ADMIN) {
+            throw new IllegalStateException("Cannot delete an admin account.");
+        }
+        userRepository.deleteById(id);
+    }
 }

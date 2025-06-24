@@ -13,4 +13,5 @@ public class ReviewDTO { // 用于展示
     private String commentText;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Integer score;
 }

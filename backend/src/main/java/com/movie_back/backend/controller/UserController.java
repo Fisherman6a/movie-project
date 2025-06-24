@@ -5,9 +5,13 @@ import com.movie_back.backend.dto.user.UserProfileUpdateDTO;
 import com.movie_back.backend.entity.User;
 import com.movie_back.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -47,5 +51,22 @@ public class UserController {
             @RequestBody UserProfileUpdateDTO profileData) {
         UserDTO updatedUser = userService.updateUserProfile(currentUser.getId(), profileData);
         return ResponseEntity.ok(updatedUser);
+    }
+
+
+        // 获取所有用户 - 仅限管理员
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
+        List<UserDTO> users = userService.findAllUsers();
+        return ResponseEntity.ok(users);
+    }
+
+    // 删除用户 - 仅限管理员
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 }
