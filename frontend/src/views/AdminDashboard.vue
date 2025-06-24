@@ -59,7 +59,7 @@
 </template>
 
 <script setup>
-import { ref, h, onMounted } from 'vue'; // 删除了未使用的 'computed'
+import { ref, h, onMounted } from 'vue';
 import apiService from '@/services/apiService';
 import {
     NLayoutContent, NTabs, NTabPane, NH1, NDataTable, NButton, NSpace, NPopconfirm, useMessage,
@@ -83,7 +83,6 @@ const handleOpenModal = (type, mode, item = {}) => {
     modalEntityType.value = type;
     modalMode.value = mode;
     if (type === 'movie' && mode === 'edit') {
-        // 后端返回的 MovieDTO 中 cast 和 directors 是对象数组，需要提取 id
         formData.value = {
             ...item,
             actorIds: item.cast.map(a => a.id),
@@ -130,7 +129,7 @@ const handleSubmit = () => {
 // ==================== 影视管理逻辑 ====================
 const loadingCinema = ref(true);
 const cinemaData = ref([]);
-const cinemaPagination = { pageSize: 10 }; // 改为每页10条，更统一
+const cinemaPagination = { pageSize: 10 };
 
 const createCinemaColumns = () => [
     { title: 'ID', key: 'id', width: 60 },
@@ -165,7 +164,7 @@ const fetchCinemaData = async () => {
         const movies = moviesRes.data.content.map(m => ({ id: m.id, type: '电影', name: m.title, entityType: 'movie', original: m }));
         const actors = actorsRes.data.map(a => ({ id: a.id, type: '演员', name: a.name, entityType: 'actor', original: a }));
         const directors = directorsRes.data.map(d => ({ id: d.id, type: '导演', name: d.name, entityType: 'director', original: d }));
-        cinemaData.value = [...movies, ...actors, ...directors].sort((a, b) => b.id - a.id); // 按ID降序
+        cinemaData.value = [...movies, ...actors, ...directors].sort((a, b) => b.id - a.id);
     } catch (error) {
         message.error('加载影视数据失败');
     } finally {
@@ -208,6 +207,14 @@ const createReviewColumns = () => [
     },
     { title: '评论内容', key: 'commentText', ellipsis: { tooltip: true } },
     { title: '用户名', key: 'username' },
+    {
+        title: '点赞数',
+        key: 'likes',
+        width: 80,
+        render(row) {
+            return h(NText, { type: row.likes > 0 ? 'success' : row.likes < 0 ? 'error' : 'default' }, { default: () => row.likes });
+        }
+    },
     {
         title: '评论时间',
         key: 'createdAt',

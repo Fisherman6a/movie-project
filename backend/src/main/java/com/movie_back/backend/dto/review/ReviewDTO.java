@@ -14,4 +14,5 @@ public class ReviewDTO { // 用于展示
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Integer score;
+    private Integer likes;
 }

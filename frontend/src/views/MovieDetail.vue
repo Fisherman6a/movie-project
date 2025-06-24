@@ -114,6 +114,21 @@
                 }}</n-text>
               </template>
               <p>{{ review.commentText }}</p>
+              <!-- ========== START: 点赞/点踩区域 ========== -->
+              <template #footer>
+                <n-space align="center">
+                  <n-button text @click="handleVote(review, 'up')">
+                    <template #icon><n-icon :component="ThumbsUpIcon" /></template>
+                  </n-button>
+                  <n-text :type="review.likes > 0 ? 'success' : review.likes < 0 ? 'error' : 'default'"
+                    style="font-weight: bold;">
+                    {{ review.likes }}
+                  </n-text>
+                  <n-button text @click="handleVote(review, 'down')">
+                    <template #icon><n-icon :component="ThumbsDownIcon" /></template>
+                  </n-button>
+                </n-space>
+              </template>
             </n-thing>
           </n-list-item>
           <n-list-item v-if="reviews.length === 0">
@@ -130,9 +145,10 @@
 import { ref, onMounted } from "vue";
 import apiService from "@/services/apiService";
 import { useAuthStore } from "@/stores/authStore";
+import { ThumbsUpOutline as ThumbsUpIcon, ThumbsDownOutline as ThumbsDownIcon } from '@vicons/ionicons5';
 import {
   NLayoutContent, NSpin, NGrid, NGi, NH1, NH2, NH3, NP, NText, NRate, NInput, NButton, NList, NListItem,
-  NThing, NEmpty, NFlex, NAlert, useMessage, NCard, NSpace, NAvatar,
+  NThing, NEmpty, NFlex, NAlert, useMessage, NCard, NSpace, NAvatar, NIcon
 } from "naive-ui";
 
 const props = defineProps({
@@ -199,6 +215,21 @@ const submitReview = async () => {
     console.error(error);
   } finally {
     isSubmitting.value = false;
+  }
+};
+
+const handleVote = async (review, direction) => {
+  if (!authStore.isAuthenticated) {
+    message.warning('请先登录再进行投票');
+    return;
+  }
+  try {
+    const response = await apiService.voteOnReview(review.id, direction);
+    // 更新前端数据，避免重新加载整个列表
+    review.likes = response.data.likes;
+  } catch (error) {
+    message.error('投票失败');
+    console.error(error);
   }
 };
 

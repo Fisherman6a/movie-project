@@ -107,6 +107,10 @@ export default {
     deleteReview(reviewId) {
         return apiClient.delete(`/reviews/${reviewId}`);
     },
+    voteOnReview(reviewId, direction) {
+        // direction 应该是 'up' 或 'down'
+        return apiClient.post(`/reviews/${reviewId}/vote`, { direction });
+    },
 
     // 评分相关
     rateMovie(movieId, userId, score) {

@@ -151,6 +151,7 @@ public class ReviewService {
         dto.setMovieTitle(review.getMovie().getTitle());
         dto.setUserId(review.getUser().getId());
         dto.setUsername(review.getUser().getUsername());
+        dto.setLikes(review.getLikes());
 
         // ========== START: 新增逻辑，查找并设置评分 ==========
         Optional<UserRating> userRatingOpt = userRatingRepository
@@ -159,5 +160,23 @@ public class ReviewService {
         // ========== END: 新增逻辑 ==========
 
         return dto;
+    }
+
+    // ========== START: 新增点赞/点踩服务逻辑 ==========
+    @Transactional
+    public ReviewDTO voteOnReview(Long reviewId, String direction) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException("未找到 ID 为 " + reviewId + " 的评论"));
+
+        if ("up".equalsIgnoreCase(direction)) {
+            review.setLikes(review.getLikes() + 1);
+        } else if ("down".equalsIgnoreCase(direction)) {
+            review.setLikes(review.getLikes() - 1);
+        } else {
+            throw new IllegalArgumentException("无效的投票方向，必须是 'up' 或 'down'");
+        }
+
+        Review savedReview = reviewRepository.save(review);
+        return convertToReviewDTO(savedReview);
     }
 }

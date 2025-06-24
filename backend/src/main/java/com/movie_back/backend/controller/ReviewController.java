@@ -91,10 +91,23 @@ public class ReviewController {
         return ResponseEntity.ok(updatedReview);
     }
 
-        @GetMapping("/reviews")
+    @GetMapping("/reviews")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ReviewDTO>> getAllReviews() {
         List<ReviewDTO> reviews = reviewService.getAllReviews();
         return ResponseEntity.ok(reviews);
+    }
+
+    public static class VoteRequest {
+        public String direction; // "up" or "down"
+    }
+
+    @PostMapping("/reviews/{reviewId}/vote")
+    @PreAuthorize("isAuthenticated()") // 确保用户已登录
+    public ResponseEntity<ReviewDTO> voteOnReview(
+            @PathVariable Long reviewId,
+            @RequestBody VoteRequest voteRequest) {
+        ReviewDTO updatedReview = reviewService.voteOnReview(reviewId, voteRequest.direction);
+        return ResponseEntity.ok(updatedReview);
     }
 }

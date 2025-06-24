@@ -20,6 +20,9 @@ public class Review {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(nullable = false) // <--- 新增
+    private Integer likes = 0; // 点赞数，可以为负
+
     @Lob
     @Column(nullable = false)
     private String commentText;
