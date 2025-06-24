@@ -2,22 +2,19 @@ package com.movie_back.backend.service;
 
 import com.movie_back.backend.dto.review.ReviewDTO;
 import com.movie_back.backend.dto.review.ReviewRequest;
-import com.movie_back.backend.dto.userRating.UserRatingRequest;
 import com.movie_back.backend.entity.Movie;
 import com.movie_back.backend.entity.Review;
 import com.movie_back.backend.entity.User;
-import com.movie_back.backend.entity.UserRating;
 import com.movie_back.backend.exception.ResourceNotFoundException;
 import com.movie_back.backend.repository.MovieRepository;
 import com.movie_back.backend.repository.ReviewRepository;
-import com.movie_back.backend.repository.UserRatingRepository;
 import com.movie_back.backend.repository.UserRepository;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,35 +23,24 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final MovieRepository movieRepository;
     private final UserRepository userRepository;
-    private final UserRatingRepository userRatingRepository;
-    private final UserRatingService userRatingService;
+    private final MovieService movieService;
 
     public ReviewService(ReviewRepository reviewRepository, MovieRepository movieRepository,
-            UserRepository userRepository, UserRatingRepository userRatingRepository,
-            UserRatingService userRatingService) {
+            UserRepository userRepository, @Lazy MovieService movieService) {
         this.reviewRepository = reviewRepository;
         this.movieRepository = movieRepository;
         this.userRepository = userRepository;
-        this.userRatingRepository = userRatingRepository;
-        this.userRatingService = userRatingService;
+        this.movieService = movieService;
     }
 
-    // 获取所有评论
     @Transactional(readOnly = true)
     public List<ReviewDTO> getAllReviews() {
         return reviewRepository.findAll().stream()
                 .map(this::convertToReviewDTO)
-                // 按创建时间降序排序
                 .sorted(Comparator.comparing(ReviewDTO::getCreatedAt).reversed())
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 获取特定电影的所有评论。
-     * * @param movieId 电影的 ID。
-     * 
-     * @return 评论 DTO 的列表。
-     */
     @Transactional(readOnly = true)
     public List<ReviewDTO> getReviewsForMovie(Long movieId) {
         List<Review> reviews = reviewRepository.findByMovieId(movieId);
@@ -63,12 +49,6 @@ public class ReviewService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 获取特定用户的所有评论。
-     * * @param userId 用户的 ID。
-     * 
-     * @return 评论 DTO 的列表。
-     */
     @Transactional(readOnly = true)
     public List<ReviewDTO> getReviewsForUser(Long userId) {
         if (!userRepository.existsById(userId)) {
@@ -80,27 +60,12 @@ public class ReviewService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 为电影添加一条新评论，并同时处理评分。
-     * * @param movieId 被评论的电影 ID。
-     * 
-     * @param userId        发表评论的用户 ID。
-     * @param reviewRequest 包含评论内容和评分的数据。
-     * @return 已创建评论的 DTO。
-     */
     @Transactional
     public ReviewDTO addReview(Long movieId, Long userId, ReviewRequest reviewRequest) {
-        // 检查用户是否已经对该电影发表过评论
         if (reviewRepository.findByMovieIdAndUserId(movieId, userId).isPresent()) {
-            throw new IllegalStateException("User has already reviewed this movie.");
+            throw new IllegalStateException("您已经评论过这部电影了。");
         }
 
-        // 1. 调用 UserRatingService 来添加或更新评分
-        UserRatingRequest ratingRequest = new UserRatingRequest();
-        ratingRequest.setScore(reviewRequest.getScore());
-        userRatingService.addOrUpdateRating(movieId, userId, ratingRequest);
-
-        // 2. 创建文字评论记录
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new ResourceNotFoundException("未找到 ID 为 " + movieId + " 的电影"));
         User user = userRepository.findById(userId)
@@ -110,68 +75,43 @@ public class ReviewService {
         review.setMovie(movie);
         review.setUser(user);
         review.setCommentText(reviewRequest.getCommentText());
+        review.setScore(reviewRequest.getScore());
 
-        Review savedReview = reviewRepository.save(review);
-        return convertToReviewDTO(savedReview);
+        reviewRepository.save(review);
+
+        // 评论保存后，调用 MovieService 更新平均分
+        movieService.updateMovieAverageRating(movieId);
+
+        return convertToReviewDTO(review);
     }
 
-    /**
-     * 更新一条现有评论。
-     *
-     * @param reviewId      要更新的评论 ID。
-     * @param reviewRequest 包含新评论内容的数据。
-     * @return 更新后的评论 DTO。
-     */
     @Transactional
     public ReviewDTO updateReview(Long reviewId, ReviewRequest reviewRequest) {
-        // 从数据库找到现有评论
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ResourceNotFoundException("未找到 ID 为 " + reviewId + " 的评论"));
 
-        // 更新评论文本
         review.setCommentText(reviewRequest.getCommentText());
+        review.setScore(reviewRequest.getScore());
 
-        // 保存更新后的评论
         Review updatedReview = reviewRepository.save(review);
+
+        // 更新后也要重新计算平均分
+        movieService.updateMovieAverageRating(review.getMovie().getId());
+
         return convertToReviewDTO(updatedReview);
     }
 
-    /**
-     * 根据 ID 删除一条评论。
-     * * @param reviewId 要删除的评论 ID。
-     */
     @Transactional
     public void deleteReview(Long reviewId) {
-        if (!reviewRepository.existsById(reviewId)) {
-            throw new ResourceNotFoundException("未找到 ID 为 " + reviewId + " 的评论");
-        }
-        reviewRepository.deleteById(reviewId);
-    }
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException("未找到 ID 为 " + reviewId + " 的评论"));
 
-    /**
-     * 将 Review 实体转换为其 DTO 表现形式。
-     * * @param review Review 实体。
-     * 
-     * @return 对应的 ReviewDTO。
-     */
-    private ReviewDTO convertToReviewDTO(Review review) {
-        ReviewDTO dto = new ReviewDTO();
-        dto.setId(review.getId());
-        dto.setCommentText(review.getCommentText());
-        dto.setCreatedAt(review.getCreatedAt());
-        dto.setUpdatedAt(review.getUpdatedAt());
-        dto.setMovieId(review.getMovie().getId());
-        dto.setMovieTitle(review.getMovie().getTitle());
-        dto.setUserId(review.getUser().getId());
-        dto.setUsername(review.getUser().getUsername());
-        dto.setUserProfileImageUrl(review.getUser().getProfileImageUrl());
-        dto.setLikes(review.getLikes());
+        Long movieId = review.getMovie().getId();
 
-        Optional<UserRating> userRatingOpt = userRatingRepository
-                .findByMovieIdAndUserId(review.getMovie().getId(), review.getUser().getId());
-        userRatingOpt.ifPresent(userRating -> dto.setScore(userRating.getScore()));
+        reviewRepository.delete(review);
 
-        return dto;
+        // 删除后也要更新平均分
+        movieService.updateMovieAverageRating(movieId);
     }
 
     @Transactional
@@ -189,5 +129,21 @@ public class ReviewService {
 
         Review savedReview = reviewRepository.save(review);
         return convertToReviewDTO(savedReview);
+    }
+
+    private ReviewDTO convertToReviewDTO(Review review) {
+        ReviewDTO dto = new ReviewDTO();
+        dto.setId(review.getId());
+        dto.setCommentText(review.getCommentText());
+        dto.setScore(review.getScore());
+        dto.setCreatedAt(review.getCreatedAt());
+        dto.setUpdatedAt(review.getUpdatedAt());
+        dto.setMovieId(review.getMovie().getId());
+        dto.setMovieTitle(review.getMovie().getTitle());
+        dto.setUserId(review.getUser().getId());
+        dto.setUsername(review.getUser().getUsername());
+        dto.setUserProfileImageUrl(review.getUser().getProfileImageUrl());
+        dto.setLikes(review.getLikes());
+        return dto;
     }
 }

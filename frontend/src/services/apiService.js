@@ -30,13 +30,13 @@ export default {
     getHotMovies(limit = 10) {
         return apiClient.get(`/movies/hot?limit=${limit}`);
     },
-    getLatestMovies(limit = 10) {
-        return apiClient.get(`/movies/search?sortBy=releaseYear&sortDir=desc&size=${limit}`);
+    getLatestMovies(params) {
+        return apiClient.get(`/movies/search`, { params });
     },
     searchMovies(params) {
+        // 这个接口似乎是按姓名搜电影，但后端实现是按演员/导演，建议保持原样或重命名以明确
         return apiClient.get(`/movies/${params.type}?name=${params.name}`);
     },
-    // **新增**: 按标题搜索电影
     searchMoviesByTitle(title) {
         return apiClient.get(`/movies/search?title=${encodeURIComponent(title)}`);
     },
@@ -53,10 +53,10 @@ export default {
         return apiClient.delete(`/movies/${id}`);
     },
     getAllMovies() {
-        return apiClient.get('/movies/search?size=1000');
+        return apiClient.get('/movies/search?size=1000'); // 获取所有电影用于管理后台
     },
 
-    // 演员api
+    // 演员API
     getAllActors() {
         return apiClient.get('/actors');
     },
@@ -76,7 +76,7 @@ export default {
         return apiClient.get(`/actors/search?name=${encodeURIComponent(name)}`);
     },
 
-    // 导演管理api
+    // 导演API
     getAllDirectors() {
         return apiClient.get('/directors');
     },
@@ -96,6 +96,7 @@ export default {
         return apiClient.get(`/directors/search?name=${encodeURIComponent(name)}`);
     },
 
+    // 评论 & 评分 API
     getAllReviews() {
         return apiClient.get('/reviews');
     },
@@ -105,10 +106,13 @@ export default {
     getReviewsByUserId(userId) {
         return apiClient.get(`/users/${userId}/reviews`);
     },
+    // **核心修改**: 合并 addReview 和 rateMovie
     addReview(movieId, userId, score, commentText) {
+        // score 是 1-5 星，后端需要 1-10分
         return apiClient.post(`/movies/${movieId}/reviews?userId=${userId}`, { score: score * 2, commentText });
     },
-    updateReview(reviewId, data) {
+    // **核心修改**: 更新评论时也可能需要更新分数
+    updateReview(reviewId, data) { // data can be { commentText, score }
         return apiClient.put(`/reviews/${reviewId}`, data);
     },
     deleteReview(reviewId) {
@@ -117,15 +121,15 @@ export default {
     voteOnReview(reviewId, direction) {
         return apiClient.post(`/reviews/${reviewId}/vote`, { direction });
     },
-    rateMovie(movieId, userId, score) {
-        return apiClient.post(`/movies/${movieId}/ratings?userId=${userId}`, { score });
-    },
+    // **核心修改**: rateMovie 已被 addReview 替代，可以移除
+    // rateMovie(movieId, userId, score) {
+    //     return apiClient.post(`/movies/${movieId}/ratings?userId=${userId}`, { score });
+    // },
 
+    // 用户API
     updateUserProfile(data) {
-        // 注意：这里的apiClient实例会自动附加token，比直接用axios好
         return apiClient.put('/users/me', data);
     },
-
     getAllUsers() {
         return apiClient.get('/users');
     },

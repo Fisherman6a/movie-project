@@ -2,7 +2,6 @@
 CREATE DATABASE movie_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 SHOW CREATE TABLE `users`;
-SHOW CREATE TABLE `user_ratings`;
 SHOW CREATE TABLE `actors`;
 SHOW CREATE TABLE `directors`;
 SHOW CREATE TABLE `movies`;

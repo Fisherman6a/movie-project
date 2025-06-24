@@ -23,6 +23,10 @@ public class Review {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    // **核心修改 2**: 新增评分字段
+    @Column(nullable = false)
+    private Integer score; // 1-10 分制
+
     @Column(nullable = false)
     private Integer likes = 0;
 

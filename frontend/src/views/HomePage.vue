@@ -4,9 +4,7 @@
       <img v-for="slide in carouselSlides" :key="slide.id" class="carousel-img" :src="slide.image">
     </n-carousel>
 
-    <!-- ========== START: MODIFIED STRUCTURE ========== -->
     <n-spin :show="loading">
-      <!-- 热门电影区 -->
       <n-flex justify="space-between" align="center">
         <n-h2 prefix="bar" style="margin: 0;">
           <n-text type="primary">热门电影</n-text>
@@ -35,7 +33,6 @@
         </n-grid-item>
       </n-grid>
 
-      <!-- 最新电影区 -->
       <n-flex justify="space-between" align="center" style="margin-top: 40px;">
         <n-h2 prefix="bar" style="margin: 0;">
           <n-text type="primary">最新电影</n-text>
@@ -66,18 +63,15 @@
         </n-grid-item>
       </n-grid>
 
-      <!-- 为 Spin 组件设置一个最小高度，防止加载时页面塌陷 -->
       <template #description>
         正在加载电影...
       </template>
       <div v-if="loading" style="min-height: 400px;"></div>
     </n-spin>
-    <!-- ========== END: MODIFIED STRUCTURE ========== -->
   </n-layout-content>
 </template>
 
 <script setup>
-// ... script 部分保持不变 ...
 import { ref, onMounted } from 'vue';
 import {
   NLayoutContent, NText, NCarousel, NH2, NGrid, NGridItem, NCard,
@@ -101,7 +95,8 @@ const fetchHomePageMovies = async () => {
   try {
     const [hotResponse, latestResponse] = await Promise.all([
       apiService.getHotMovies(12),
-      apiService.getLatestMovies(12)
+      // **核心修正**: 将数字 12 改为参数对象
+      apiService.getLatestMovies({ sortBy: 'releaseYear', sortDir: 'desc', size: 12 })
     ]);
     popularMovies.value = hotResponse.data;
     latestMovies.value = latestResponse.data.content;
@@ -116,7 +111,6 @@ onMounted(fetchHomePageMovies);
 </script>
 
 <style scoped>
-/* ... 样式部分保持不变 ... */
 .carousel-img {
   width: 100%;
   height: 400px;

@@ -168,7 +168,6 @@
 </template>
 
 <script setup>
-// ... script 部分无需修改，保持原样即可
 import { ref, onMounted, computed } from 'vue';
 import apiService from '@/services/apiService';
 import { useAuthStore } from '@/stores/authStore';
@@ -224,7 +223,11 @@ const handleUpdateReview = async () => {
   }
   isUpdating.value = true;
   try {
-    await apiService.updateReview(editingReview.value.id, { commentText: editingReview.value.commentText });
+    // 假设 updateReview API 可以接受包含评论和分数的新对象
+    await apiService.updateReview(editingReview.value.id, {
+      commentText: editingReview.value.commentText,
+      score: editingReview.value.score // 确保分数也被传递
+    });
     message.success('评论更新成功');
     showEditModal.value = false;
     await fetchMovieData();
@@ -268,9 +271,11 @@ const getStarPercentage = (star) => {
 const fetchMovieData = async () => {
   loading.value = true;
   try {
-    const movieResponse = await apiService.getMovieById(props.id);
+    const [movieResponse, reviewsResponse] = await Promise.all([
+      apiService.getMovieById(props.id),
+      apiService.getReviewsForMovie(props.id)
+    ]);
     movie.value = movieResponse.data;
-    const reviewsResponse = await apiService.getReviewsForMovie(props.id);
     reviews.value = reviewsResponse.data.sort(
       (a, b) => (b.likes - a.likes) || (new Date(b.createdAt) - new Date(a.createdAt))
     );
@@ -292,15 +297,15 @@ const submitReview = async () => {
     await apiService.addReview(
       props.id,
       authStore.userId,
-      myRating.value,
+      myRating.value, // 1-5 星
       myComment.value.trim()
     );
     message.success("评价成功！");
     myComment.value = "";
     myRating.value = 0;
-    await fetchMovieData();
+    await fetchMovieData(); // 重新加载数据
   } catch (error) {
-    message.error("提交失败，可能您已评价过该电影。");
+    message.error(error.response?.data?.message || "提交失败，可能您已评价过该电影。");
     console.error(error);
   } finally {
     isSubmitting.value = false;
@@ -325,7 +330,6 @@ onMounted(fetchMovieData);
 </script>
 
 <style scoped>
-/* style 部分无需修改，保持原样即可 */
 .poster-img {
   width: 100%;
   border-radius: 8px;
@@ -386,6 +390,11 @@ onMounted(fetchMovieData);
 .person-link {
   color: inherit;
   text-decoration: none;
+}
+
+.person-link:hover {
+  text-decoration: underline;
+  color: #63e2b7;
 }
 
 .rating-distribution {

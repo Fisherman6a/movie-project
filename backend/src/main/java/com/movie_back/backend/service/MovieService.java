@@ -7,14 +7,14 @@ import com.movie_back.backend.dto.movie.RatingDistributionDTO;
 import com.movie_back.backend.entity.Actor;
 import com.movie_back.backend.entity.Director;
 import com.movie_back.backend.entity.Movie;
-import com.movie_back.backend.entity.UserRating;
 import com.movie_back.backend.exception.ResourceNotFoundException;
 import com.movie_back.backend.repository.ActorRepository;
 import com.movie_back.backend.repository.DirectorRepository;
 import com.movie_back.backend.repository.MovieRepository;
-import com.movie_back.backend.repository.UserRatingRepository;
-
+import com.movie_back.backend.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,7 +33,11 @@ public class MovieService {
     private final MovieRepository movieRepository;
     private final ActorRepository actorRepository;
     private final DirectorRepository directorRepository;
-    private final UserRatingRepository userRatingRepository;
+    private final ReviewRepository reviewRepository;
+
+    // **核心修正2**: 注入在 application.properties 中定义的默认图片 URL
+    @Value("${default.person.image.url}")
+    private String defaultPersonImageUrl;
 
     @Transactional
     public MovieDTO createMovie(CreateMovieRequest request) {
@@ -69,21 +73,25 @@ public class MovieService {
         movieRepository.deleteById(movieId);
     }
 
+    // **核心修正**: 添加缺失的 updateMovieAverageRating 方法
     @Transactional
     public void updateMovieAverageRating(Long movieId) {
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new ResourceNotFoundException("Movie not found with id: " + movieId));
-        double average = movie.getUserRatings().stream()
-                .mapToInt(UserRating::getScore)
-                .average()
-                .orElse(0.0);
-        movie.setAverageRating(Math.round(average * 10.0) / 10.0);
+
+        // 从 ReviewRepository 计算平均分
+        Double average = reviewRepository.getAverageRatingForMovie(movieId);
+
+        double finalAverage = (average != null) ? average : 0.0;
+
+        // 保留一位小数并更新
+        movie.setAverageRating(Math.round(finalAverage * 10.0) / 10.0);
         movieRepository.save(movie);
     }
 
     @Transactional(readOnly = true)
     public Page<MovieDTO> searchMovies(
-            String title, // **新增**
+            String title,
             Integer releaseYear,
             String genre, String country, Double minRating,
             String sortBy,
@@ -92,11 +100,9 @@ public class MovieService {
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
         Specification<Movie> spec = Specification.where(null);
 
-        // **新增**：按标题模糊查询的逻辑
         if (title != null && !title.isEmpty()) {
             spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("title")), "%" + title.toLowerCase() + "%"));
         }
-
         if (releaseYear != null) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("releaseYear"), releaseYear));
         }
@@ -111,12 +117,10 @@ public class MovieService {
         }
 
         Page<Movie> moviePage = movieRepository.findAll(spec, pageable);
-
         moviePage.getContent().forEach(movie -> {
             movie.getCast().size();
             movie.getDirectors().size();
         });
-
         return moviePage.map(this::convertToMovieDTO);
     }
 
@@ -197,16 +201,28 @@ public class MovieService {
 
         if (movie.getCast() != null) {
             dto.setCast(movie.getCast().stream()
-                    .map(actor -> new PersonInfoDTO(actor.getId(), actor.getName(), actor.getProfileImageUrl()))
+                    .map(actor -> {
+                        String imageUrl = actor.getProfileImageUrl();
+                        if (imageUrl == null || imageUrl.isEmpty()) {
+                            imageUrl = defaultPersonImageUrl;
+                        }
+                        return new PersonInfoDTO(actor.getId(), actor.getName(), imageUrl);
+                    })
                     .collect(Collectors.toList()));
         }
         if (movie.getDirectors() != null) {
             dto.setDirectors(movie.getDirectors().stream()
-                    .map(director -> new PersonInfoDTO(director.getId(), director.getName(),
-                            director.getProfileImageUrl()))
+                    .map(director -> {
+                        String imageUrl = director.getProfileImageUrl();
+                        if (imageUrl == null || imageUrl.isEmpty()) {
+                            imageUrl = defaultPersonImageUrl;
+                        }
+                        return new PersonInfoDTO(director.getId(), director.getName(), imageUrl);
+                    })
                     .collect(Collectors.toList()));
         }
-        List<RatingDistributionDTO> distribution = userRatingRepository.getRatingDistributionForMovie(movie.getId());
+
+        List<RatingDistributionDTO> distribution = reviewRepository.getRatingDistributionForMovie(movie.getId());
         long totalRatings = distribution.stream().mapToLong(RatingDistributionDTO::getCount).sum();
 
         if (totalRatings > 0) {

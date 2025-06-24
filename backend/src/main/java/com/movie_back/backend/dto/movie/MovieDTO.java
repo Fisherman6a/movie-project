@@ -3,7 +3,7 @@ package com.movie_back.backend.dto.movie;
 import lombok.Data;
 
 import java.util.List;
-// import java.util.Set;
+import java.util.Set;
 
 import com.movie_back.backend.dto.PersonInfoDTO;
 

@@ -11,8 +11,9 @@ import java.util.Set;
 @Entity
 @Table(name = "movies")
 @Data
-@EqualsAndHashCode(exclude = { "cast", "directors", "reviews", "userRatings" }) // 避免循环引用导致的hashCode和equals问题
-@ToString(exclude = { "cast", "directors", "reviews", "userRatings" }) // 避免循环引用导致的toString问题
+// **核心修改**: 从 exclude 中移除 "userRatings"
+@EqualsAndHashCode(exclude = { "cast", "directors", "reviews" })
+@ToString(exclude = { "cast", "directors", "reviews" })
 public class Movie {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,7 +39,7 @@ public class Movie {
     private String synopsis; // 简介
 
     @Column
-    private Double averageRating = 0.0; // 评分 (由UserRating计算得出)
+    private Double averageRating = 0.0; // 评分 (由Review的score计算得出)
 
     @Column(length = 2048)
     private String posterUrl; // 海报图片URL (用于图形化显示)
@@ -54,6 +55,8 @@ public class Movie {
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<Review> reviews = new HashSet<>();
 
-    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<UserRating> userRatings = new HashSet<>();
+    // **核心修改**: 移除对 UserRating 的引用
+    // @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval =
+    // true, fetch = FetchType.LAZY)
+    // private Set<UserRating> userRatings = new HashSet<>();
 }

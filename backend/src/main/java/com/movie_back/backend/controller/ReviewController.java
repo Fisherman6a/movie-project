@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -21,68 +22,35 @@ public class ReviewController {
         this.reviewService = reviewService;
     }
 
-    /**
-     * 为电影添加评论的端点。
-     * 为简化起见，userId 作为请求参数传递。在真实世界的应用中，
-     * 这通常应从安全上下文（例如，已登录用户）中获取。
-     *
-     * @param movieId       要评论的电影 ID。
-     * @param userId        提交评论的用户 ID。
-     * @param reviewRequest 评论的内容。
-     * @return 创建的评论。
-     */
+    // **核心修改 1**: 简化了 addReviewToMovie 接口
     @PostMapping("/movies/{movieId}/reviews")
     public ResponseEntity<ReviewDTO> addReviewToMovie(
             @PathVariable Long movieId,
-            @RequestParam Long userId, // 简化处理：在真实应用中，从安全上下文中获取
+            @RequestParam Long userId, // 在真实应用中，应从安全上下文中获取
             @Valid @RequestBody ReviewRequest reviewRequest) {
         ReviewDTO createdReview = reviewService.addReview(movieId, userId, reviewRequest);
         return new ResponseEntity<>(createdReview, HttpStatus.CREATED);
     }
 
-    /**
-     * 获取特定电影所有评论的端点。
-     * 
-     * @param movieId 电影的 ID。
-     * @return 评论列表。
-     */
     @GetMapping("/movies/{movieId}/reviews")
     public ResponseEntity<List<ReviewDTO>> getReviewsForMovie(@PathVariable Long movieId) {
         List<ReviewDTO> reviews = reviewService.getReviewsForMovie(movieId);
         return ResponseEntity.ok(reviews);
     }
 
-    /**
-     * 获取特定用户所有评论的端点。
-     * 
-     * @param userId 用户的 ID。
-     * @return 评论列表。
-     */
     @GetMapping("/users/{userId}/reviews")
     public ResponseEntity<List<ReviewDTO>> getReviewsByUser(@PathVariable Long userId) {
         List<ReviewDTO> reviews = reviewService.getReviewsForUser(userId);
         return ResponseEntity.ok(reviews);
     }
 
-    /**
-     * 删除评论的端点。
-     * 
-     * @param reviewId 要删除的评论 ID。
-     * @return 成功删除后返回无内容的响应。
-     */
     @DeleteMapping("/reviews/{reviewId}")
     public ResponseEntity<Void> deleteReview(@PathVariable Long reviewId) {
         reviewService.deleteReview(reviewId);
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * 更新评论的端点。
-     *
-     * @param reviewId      要更新的评论 ID。
-     * @param reviewRequest 评论的新内容。
-     * @return 成功更新后返回更新的评论。
-     */
+    // **核心修改 2**: 简化了 updateReview 接口
     @PutMapping("/reviews/{reviewId}")
     public ResponseEntity<ReviewDTO> updateReview(
             @PathVariable Long reviewId,
@@ -98,16 +66,13 @@ public class ReviewController {
         return ResponseEntity.ok(reviews);
     }
 
-    public static class VoteRequest {
-        public String direction; // "up" or "down"
-    }
-
     @PostMapping("/reviews/{reviewId}/vote")
-    @PreAuthorize("isAuthenticated()") // 确保用户已登录
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ReviewDTO> voteOnReview(
             @PathVariable Long reviewId,
-            @RequestBody VoteRequest voteRequest) {
-        ReviewDTO updatedReview = reviewService.voteOnReview(reviewId, voteRequest.direction);
+            @RequestBody Map<String, String> payload) { // 使用 Map 接收简单的 JSON
+        String direction = payload.get("direction");
+        ReviewDTO updatedReview = reviewService.voteOnReview(reviewId, direction);
         return ResponseEntity.ok(updatedReview);
     }
 }

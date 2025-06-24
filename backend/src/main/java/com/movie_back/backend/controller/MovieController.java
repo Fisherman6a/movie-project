@@ -47,7 +47,7 @@ public class MovieController {
 
     @GetMapping("/search")
     public ResponseEntity<Page<MovieDTO>> searchMovies(
-            @RequestParam(required = false) String title, // **新增**
+            @RequestParam(required = false) String title,
             @RequestParam(required = false) Integer releaseYear,
             @RequestParam(required = false) String genre,
             @RequestParam(required = false) String country,

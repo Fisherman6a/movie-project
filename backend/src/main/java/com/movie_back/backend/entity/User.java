@@ -18,9 +18,9 @@ import java.util.Set;
 @Entity
 @Table(name = "users")
 @Data
-@EqualsAndHashCode(exclude = { "reviews", "userRatings" })
-@ToString(exclude = { "reviews", "userRatings" })
-// 实现 UserDetails 接口，以便 Spring Security 进行集成
+// **核心修改**: 从 exclude 中移除 "userRatings"
+@EqualsAndHashCode(exclude = { "reviews" })
+@ToString(exclude = { "reviews" })
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,16 +30,14 @@ public class User implements UserDetails {
     private String username;
 
     @Column(nullable = false)
-    private String password; // 实际项目中应加密存储
+    private String password;
 
     @Column(nullable = false, unique = true)
     private String email;
 
-    // 新增：用户头像URL
     @Column(length = 2048)
     private String profileImageUrl;
 
-    // 新增：用户角色字段
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
@@ -49,10 +47,10 @@ public class User implements UserDetails {
     @Column(length = 2048)
     private String personalWebsite;
 
-    @Column // 生日
+    @Column
     private LocalDate birthDate;
 
-    @Lob // 自我介绍/签名
+    @Lob
     private String bio;
 
     @PrePersist
@@ -63,37 +61,34 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<Review> reviews = new HashSet<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<UserRating> userRatings = new HashSet<>();
+    // **核心修改**: 移除对 UserRating 的引用
+    // @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval =
+    // true, fetch = FetchType.LAZY)
+    // private Set<UserRating> userRatings = new HashSet<>();
 
-    // 以下为实现 UserDetails 接口所需要的方法
+    // UserDetails 接口的实现方法 (保持不变)
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // 返回用户的角色权限集合
         return List.of(new SimpleGrantedAuthority(role.name()));
     }
 
     @Override
     public boolean isAccountNonExpired() {
-        // 账户是否未过期
         return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        // 账户是否未锁定
         return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        // 凭证是否未过期
         return true;
     }
 
     @Override
     public boolean isEnabled() {
-        // 账户是否启用
         return true;
     }
 }
