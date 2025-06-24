@@ -103,6 +103,13 @@ CREATE TABLE `reviews` (
 -- 1. 插入用户 (Users)
 -- 密码应该是经过哈希处理的，这里为了演示使用明文。在生产环境中请务必使用强哈希算法（如 bcrypt）。
 -- =================================================================
+
+DELETE FROM users WHERE username = 'zhangsan';
+
+DELETE FROM users WHERE username = 'lisi';
+
+DELETE FROM users WHERE username = 'wangwu';
+
 INSERT INTO
     `users` (
         `id`,
@@ -163,7 +170,7 @@ VALUES (
         '1980-12-15',
         'Male',
         '中国',
-        'https://p0.meituan.net/moviemachine/5e412921e05d9b736b7617b79c670356133099.jpg'
+        'https://i.ibb.co/hxPz98nh/image.jpg'
     ),
     (
         2,
@@ -171,7 +178,7 @@ VALUES (
         '1970-07-30',
         'Male',
         '英国 / 美国',
-        'https://p0.meituan.net/movie/0c0a68388cf311517c52f6d7af42f159261899.jpg'
+        'https://i.ibb.co/0jpH16PJ/image.webp'
     ),
     (
         3,
@@ -179,7 +186,7 @@ VALUES (
         '1954-08-16',
         'Male',
         '加拿大',
-        'https://p1.meituan.net/movie/232c2e175080b396798158d6f5ba3b30232483.jpg'
+        'https://i.ibb.co/YvFv7zf/image.jpg'
     ),
     (
         4,
@@ -189,8 +196,6 @@ VALUES (
         '英国',
         NULL
     );
--- '是，大臣' 导演之一
-
 -- =================================================================
 -- 3. 插入演员 (Actors)
 -- =================================================================

@@ -3,22 +3,69 @@
         <n-h1>管理后台</n-h1>
         <n-tabs type="line" animated @update:value="handleTabChange">
 
-            <!-- ==================== 1. 影视管理 ==================== -->
+            <!-- ==================== 1. 影视管理 (重构后) ==================== -->
             <n-tab-pane name="cinema" tab="影视管理">
-                <n-space justify="end" style="margin-bottom: 16px;">
-                    <n-button type="primary" @click="handleOpenModal('movie', 'create')">新增电影</n-button>
-                    <n-button type="primary" @click="handleOpenModal('actor', 'create')">新增演员</n-button>
-                    <n-button type="primary" @click="handleOpenModal('director', 'create')">新增导演</n-button>
+                <n-space vertical>
+                    <n-flex justify="space-between">
+                        <!-- 左侧：表格切换 和 搜索框 -->
+                        <n-space align="center">
+                            <n-radio-group v-model:value="currentTable" name="table-switch">
+                                <n-radio-button value="movies">电影</n-radio-button>
+                                <n-radio-button value="actors">演员</n-radio-button>
+                                <n-radio-button value="directors">导演</n-radio-button>
+                            </n-radio-group>
+
+                            <n-input v-if="currentTable === 'movies'" v-model:value="movieSearchKeyword"
+                                placeholder="按电影名称搜索..." clearable style="width: 240px;"
+                                @update:value="filterCinemaData">
+                                <template #prefix>
+                                    <n-icon :component="SearchIcon" />
+                                </template>
+                            </n-input>
+                            <n-input v-if="currentTable === 'actors'" v-model:value="actorSearchKeyword"
+                                placeholder="按演员姓名搜索..." clearable style="width: 240px;"
+                                @update:value="filterCinemaData">
+                                <template #prefix>
+                                    <n-icon :component="SearchIcon" />
+                                </template>
+                            </n-input>
+                            <n-input v-if="currentTable === 'directors'" v-model:value="directorSearchKeyword"
+                                placeholder="按导演姓名搜索..." clearable style="width: 240px;"
+                                @update:value="filterCinemaData">
+                                <template #prefix>
+                                    <n-icon :component="SearchIcon" />
+                                </template>
+                            </n-input>
+                        </n-space>
+
+                        <!-- 右侧：新增按钮 -->
+                        <n-button type="primary"
+                            @click="handleOpenModal(currentTable === 'movies' ? 'movie' : (currentTable === 'actors' ? 'actor' : 'director'), 'create')">
+                            新增{{ { movies: '电影', actors: '演员', directors: '导演' }[currentTable] }}
+                        </n-button>
+                    </n-flex>
+
+                    <!-- 电影表格 -->
+                    <n-data-table v-if="currentTable === 'movies'" :columns="movieColumns"
+                        :data="filteredCinemaData.movies" :loading="loadingCinema" :pagination="{ pageSize: 10 }" />
+                    <!-- 演员表格 -->
+                    <n-data-table v-if="currentTable === 'actors'" :columns="personColumns('actor')"
+                        :data="filteredCinemaData.actors" :loading="loadingCinema" :pagination="{ pageSize: 10 }" />
+                    <!-- 导演表格 -->
+                    <n-data-table v-if="currentTable === 'directors'" :columns="personColumns('director')"
+                        :data="filteredCinemaData.directors" :loading="loadingCinema" :pagination="{ pageSize: 10 }" />
                 </n-space>
-                <n-data-table :columns="cinemaColumns" :data="cinemaData" :loading="loadingCinema"
-                    :pagination="cinemaPagination" />
             </n-tab-pane>
 
             <!-- ==================== 2. 影评管理 ==================== -->
             <n-tab-pane name="reviews" tab="影评管理">
                 <n-space align="center" style="margin-bottom: 16px;">
                     <n-input v-model:value="reviewFilterKeyword" placeholder="请输入电影名称筛选" clearable style="width: 300px;"
-                        @update:value="filterReviews" />
+                        @update:value="filterReviews">
+                        <template #prefix>
+                            <n-icon :component="SearchIcon" />
+                        </template>
+                    </n-input>
                     <n-button @click="resetReviewFilter">重置</n-button>
                 </n-space>
                 <n-data-table :columns="reviewColumns" :data="filteredReviews" :loading="loadingReviews"
@@ -31,7 +78,11 @@
                 <n-p>通过用户名搜索用户并进行管理。</n-p>
                 <n-space vertical>
                     <n-input-group>
-                        <n-input v-model:value="userSearchKeyword" placeholder="输入用户名进行搜索" @keyup.enter="searchUsers" />
+                        <n-input v-model:value="userSearchKeyword" placeholder="输入用户名进行搜索" @keyup.enter="searchUsers">
+                            <template #prefix>
+                                <n-icon :component="SearchIcon" />
+                            </template>
+                        </n-input>
                         <n-button type="primary" @click="searchUsers" :loading="loadingUsers">搜索</n-button>
                     </n-input-group>
                     <n-spin :show="loadingUsers">
@@ -63,10 +114,12 @@ import { ref, h, onMounted } from 'vue';
 import apiService from '@/services/apiService';
 import {
     NLayoutContent, NTabs, NTabPane, NH1, NDataTable, NButton, NSpace, NPopconfirm, useMessage,
-    NModal, NFlex, NInput, NRate, NH2, NP, NInputGroup, NSpin, NEmpty, NText
+    NModal, NFlex, NInput, NRate, NH2, NP, NInputGroup, NSpin, NEmpty, NText,
+    NRadioGroup, NRadioButton, NIcon
 } from 'naive-ui';
 import MovieForm from '@/components/forms/MovieForm.vue';
 import PersonForm from '@/components/forms/PersonForm.vue';
+import { SearchOutline as SearchIcon } from '@vicons/ionicons5';
 
 const message = useMessage();
 const formRef = ref(null);
@@ -85,8 +138,8 @@ const handleOpenModal = (type, mode, item = {}) => {
     if (type === 'movie' && mode === 'edit') {
         formData.value = {
             ...item,
-            actorIds: item.cast.map(a => a.id),
-            directorIds: item.directors.map(d => d.id)
+            actorIds: item.actorIds,
+            directorIds: item.directorIds
         };
     } else {
         formData.value = { ...item };
@@ -95,63 +148,121 @@ const handleOpenModal = (type, mode, item = {}) => {
     showModal.value = true;
 };
 
-const handleSubmit = () => {
-    formRef.value.validate(async (errors) => {
-        if (!errors) {
-            isSubmitting.value = true;
-            try {
-                const type = modalEntityType.value;
-                const mode = modalMode.value;
-                const apiMap = {
-                    movie: { create: apiService.createMovie, update: apiService.updateMovie },
-                    actor: { create: apiService.createActor, update: apiService.updateActor },
-                    director: { create: apiService.createDirector, update: apiService.updateDirector },
-                };
+const handleSubmit = async () => {
+    try {
+        // 现在可以直接 await，因为子组件返回了 Promise
+        await formRef.value.validate();
 
-                if (mode === 'create') {
-                    await apiMap[type].create(formData.value);
-                } else {
-                    await apiMap[type].update(formData.value.id, formData.value);
-                }
+        // --- 验证成功 ---
+        isSubmitting.value = true;
+        try {
+            const type = modalEntityType.value;
+            const mode = modalMode.value;
+            const apiMap = {
+                movie: { create: apiService.createMovie, update: apiService.updateMovie },
+                actor: { create: apiService.createActor, update: apiService.updateActor },
+                director: { create: apiService.createDirector, update: apiService.updateDirector },
+            };
 
-                message.success('操作成功');
-                showModal.value = false;
-                fetchCinemaData();
-            } catch (error) {
-                message.error('操作失败: ' + (error.response?.data?.message || error.message));
-            } finally {
-                isSubmitting.value = false;
+            if (mode === 'create') {
+                await apiMap[type].create(formData.value);
+            } else {
+                await apiMap[type].update(formData.value.id, formData.value);
             }
+
+            message.success('操作成功');
+            showModal.value = false;
+            fetchCinemaData();
+        } catch (apiError) {
+            message.error('操作失败: ' + (apiError.response?.data?.message || apiError.message));
+        } finally {
+            isSubmitting.value = false;
         }
-    });
+
+    } catch (validationErrors) {
+        // --- 验证失败 ---
+        console.log('表单验证失败', validationErrors);
+        message.warning('请检查表单，所有必填项都需要填写。');
+    }
 };
 
 // ==================== 影视管理逻辑 ====================
 const loadingCinema = ref(true);
-const cinemaData = ref([]);
-const cinemaPagination = { pageSize: 10 };
+const cinemaData = ref({ movies: [], actors: [], directors: [] });
+const filteredCinemaData = ref({ movies: [], actors: [], directors: [] });
+const currentTable = ref('movies');
+const movieSearchKeyword = ref('');
+const actorSearchKeyword = ref('');
+const directorSearchKeyword = ref('');
 
-const createCinemaColumns = () => [
+const createMovieColumns = () => [
     { title: 'ID', key: 'id', width: 60 },
-    { title: '名称', key: 'name' },
-    { title: '类型', key: 'type', width: 80 },
     {
-        title: '操作',
-        key: 'actions',
+        title: '海报',
+        key: 'posterUrl',
+        width: 160,
         render(row) {
-            return h(NSpace, null, {
-                default: () => [
-                    h(NButton, { size: 'small', onClick: () => handleOpenModal(row.entityType, 'edit', row.original) }, { default: () => '编辑' }),
-                    h(NPopconfirm, { onPositiveClick: () => handleDeleteCinema(row.entityType, row.id) }, {
-                        trigger: () => h(NButton, { size: 'small', type: 'error', ghost: true }, { default: () => '删除' }),
-                        default: () => '确定要删除吗？'
-                    })
-                ]
+            return h('img', {
+                src: row.posterUrl,
+                style: {
+                    width: '108px',
+                    height: '160px',
+                    objectFit: 'cover',
+                    borderRadius: '3px'
+                }
             });
         }
+    },
+    { title: '名称', key: 'title', ellipsis: { tooltip: true } },
+    { title: '年份', key: 'releaseYear', width: 80 },
+    {
+        title: '操作', key: 'actions', render: (row) => h(NSpace, null, {
+            default: () => [
+                h(NButton, { size: 'small', onClick: () => handleOpenModal('movie', 'edit', row) }, { default: () => '编辑' }),
+                h(NPopconfirm, { onPositiveClick: () => handleDeleteCinema('movie', row.id) }, {
+                    trigger: () => h(NButton, { size: 'small', type: 'error', ghost: true }, { default: () => '删除' }),
+                    default: () => '确定要删除吗？'
+                })
+            ]
+        })
     }
 ];
-const cinemaColumns = createCinemaColumns();
+
+const createPersonColumns = (type) => [
+    { title: 'ID', key: 'id', width: 60 },
+    {
+        title: '头像',
+        key: 'profileImageUrl',
+        width: 160,
+        render(row) {
+            return h('img', {
+                src: row.profileImageUrl,
+                style: {
+                    width: '108px',
+                    height: '160px',
+                    objectFit: 'cover',
+                    borderRadius: '3px'
+                }
+            });
+        }
+    },
+    { title: '姓名', key: 'name', ellipsis: { tooltip: true } },
+    { title: '国籍', key: 'nationality' },
+    {
+        title: '操作', key: 'actions', render: (row) => h(NSpace, null, {
+            default: () => [
+                h(NButton, { size: 'small', onClick: () => handleOpenModal(type, 'edit', row) }, { default: () => '编辑' }),
+                h(NPopconfirm, { onPositiveClick: () => handleDeleteCinema(type, row.id) }, {
+                    trigger: () => h(NButton, { size: 'small', type: 'error', ghost: true }, { default: () => '删除' }),
+                    default: () => '确定要删除吗？'
+                })
+            ]
+        })
+    }
+];
+
+const movieColumns = createMovieColumns();
+const personColumns = (type) => createPersonColumns(type);
 
 const fetchCinemaData = async () => {
     loadingCinema.value = true;
@@ -161,15 +272,32 @@ const fetchCinemaData = async () => {
             apiService.getAllActors(),
             apiService.getAllDirectors()
         ]);
-        const movies = moviesRes.data.content.map(m => ({ id: m.id, type: '电影', name: m.title, entityType: 'movie', original: m }));
-        const actors = actorsRes.data.map(a => ({ id: a.id, type: '演员', name: a.name, entityType: 'actor', original: a }));
-        const directors = directorsRes.data.map(d => ({ id: d.id, type: '导演', name: d.name, entityType: 'director', original: d }));
-        cinemaData.value = [...movies, ...actors, ...directors].sort((a, b) => b.id - a.id);
+        cinemaData.value.movies = moviesRes.data.content;
+        cinemaData.value.actors = actorsRes.data;
+        cinemaData.value.directors = directorsRes.data;
+        filterCinemaData();
     } catch (error) {
         message.error('加载影视数据失败');
     } finally {
         loadingCinema.value = false;
     }
+};
+
+const filterCinemaData = () => {
+    const movieKeyword = movieSearchKeyword.value.toLowerCase().trim();
+    filteredCinemaData.value.movies = movieKeyword
+        ? cinemaData.value.movies.filter(m => m.title.toLowerCase().includes(movieKeyword))
+        : cinemaData.value.movies;
+
+    const actorKeyword = actorSearchKeyword.value.toLowerCase().trim();
+    filteredCinemaData.value.actors = actorKeyword
+        ? cinemaData.value.actors.filter(a => a.name.toLowerCase().includes(actorKeyword))
+        : cinemaData.value.actors;
+
+    const directorKeyword = directorSearchKeyword.value.toLowerCase().trim();
+    filteredCinemaData.value.directors = directorKeyword
+        ? cinemaData.value.directors.filter(d => d.name.toLowerCase().includes(directorKeyword))
+        : cinemaData.value.directors;
 };
 
 const handleDeleteCinema = async (type, id) => {
@@ -181,7 +309,10 @@ const handleDeleteCinema = async (type, id) => {
     try {
         await apiMap[type](id);
         message.success('删除成功');
-        fetchCinemaData();
+        if (type === 'movie') cinemaData.value.movies = cinemaData.value.movies.filter(item => item.id !== id);
+        else if (type === 'actor') cinemaData.value.actors = cinemaData.value.actors.filter(item => item.id !== id);
+        else if (type === 'director') cinemaData.value.directors = cinemaData.value.directors.filter(item => item.id !== id);
+        filterCinemaData();
     } catch (error) {
         message.error('删除失败');
     }
@@ -195,35 +326,13 @@ const reviewFilterKeyword = ref('');
 
 const createReviewColumns = () => [
     { title: '电影名称', key: 'movieTitle', ellipsis: { tooltip: true } },
-    {
-        title: '评分',
-        key: 'score',
-        render(row) {
-            if (row.score) {
-                return h(NRate, { readonly: true, value: row.score / 2, size: 'small', allowHalf: true });
-            }
-            return h(NText, { depth: 3 }, { default: () => '未评分' });
-        }
-    },
+    { title: '评分', key: 'score', render: (row) => row.score ? h(NRate, { readonly: true, value: row.score / 2, size: 'small', allowHalf: true }) : h(NText, { depth: 3 }, { default: () => '未评分' }) },
     { title: '评论内容', key: 'commentText', ellipsis: { tooltip: true } },
     { title: '用户名', key: 'username' },
+    { title: '点赞数', key: 'likes', width: 80, render: (row) => h(NText, { type: row.likes > 0 ? 'success' : row.likes < 0 ? 'error' : 'default' }, { default: () => row.likes }) },
+    { title: '评论时间', key: 'createdAt', render: (row) => new Date(row.createdAt).toLocaleString() },
     {
-        title: '点赞数',
-        key: 'likes',
-        width: 80,
-        render(row) {
-            return h(NText, { type: row.likes > 0 ? 'success' : row.likes < 0 ? 'error' : 'default' }, { default: () => row.likes });
-        }
-    },
-    {
-        title: '评论时间',
-        key: 'createdAt',
-        render: (row) => new Date(row.createdAt).toLocaleString()
-    },
-    {
-        title: '操作',
-        key: 'actions',
-        render: (row) => h(NPopconfirm, { onPositiveClick: () => deleteReview(row.id) }, {
+        title: '操作', key: 'actions', render: (row) => h(NPopconfirm, { onPositiveClick: () => deleteReview(row.id) }, {
             trigger: () => h(NButton, { size: 'small', type: 'error', ghost: true }, { default: () => '删除' }),
             default: () => `确定要删除这条评论吗？`
         })
@@ -330,7 +439,7 @@ const handleDeleteUser = async (id) => {
 
 // ==================== Tab 切换逻辑 ====================
 const handleTabChange = (value) => {
-    if (value === 'cinema' && cinemaData.value.length === 0) {
+    if (value === 'cinema' && cinemaData.value.movies.length === 0) {
         fetchCinemaData();
     } else if (value === 'reviews' && allReviews.value.length === 0) {
         fetchAllReviews();

@@ -5,6 +5,7 @@ import com.movie_back.backend.entity.Actor;
 import com.movie_back.backend.exception.ResourceNotFoundException;
 import com.movie_back.backend.repository.ActorRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value; // 引入 @Value
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,9 @@ import java.util.stream.Collectors;
 public class ActorService {
 
     private final ActorRepository actorRepository;
+
+    @Value("${default.person.image.url}")
+    private String defaultPersonImageUrl;
 
     @Transactional
     public ActorDTO createActor(ActorDTO actorDTO) {
@@ -72,6 +76,11 @@ public class ActorService {
         dto.setBirthDate(actor.getBirthDate());
         dto.setNationality(actor.getNationality());
         dto.setProfileImageUrl(actor.getProfileImageUrl());
+        if (actor.getProfileImageUrl() == null || actor.getProfileImageUrl().isEmpty()) {
+            dto.setProfileImageUrl(defaultPersonImageUrl);
+        } else {
+            dto.setProfileImageUrl(actor.getProfileImageUrl());
+        }
         return dto;
     }
 }

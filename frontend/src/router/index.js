@@ -60,6 +60,12 @@ const routes = [
         props: (route) => ({ query: route.query })
     },
     {
+        path: '/person/:id', // 使用动态参数 id
+        name: 'PersonDetail',
+        component: () => import('@/views/PersonDetail.vue'),
+        props: true // 将路由参数作为 props 传递给组件
+    },
+    {
         path: '/admin',
         name: 'AdminDashboard',
         component: () => import('@/views/AdminDashboard.vue'),

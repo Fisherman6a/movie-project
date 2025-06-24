@@ -1,7 +1,9 @@
 package com.movie_back.backend.service;
 
+import com.movie_back.backend.dto.PersonInfoDTO;
 import com.movie_back.backend.dto.movie.CreateMovieRequest;
 import com.movie_back.backend.dto.movie.MovieDTO;
+import com.movie_back.backend.dto.movie.RatingDistributionDTO;
 import com.movie_back.backend.entity.Actor;
 import com.movie_back.backend.entity.Director;
 import com.movie_back.backend.entity.Movie;
@@ -10,6 +12,8 @@ import com.movie_back.backend.exception.ResourceNotFoundException;
 import com.movie_back.backend.repository.ActorRepository;
 import com.movie_back.backend.repository.DirectorRepository;
 import com.movie_back.backend.repository.MovieRepository;
+import com.movie_back.backend.repository.UserRatingRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -29,6 +33,7 @@ public class MovieService {
     private final MovieRepository movieRepository;
     private final ActorRepository actorRepository;
     private final DirectorRepository directorRepository;
+    private final UserRatingRepository userRatingRepository;
 
     @Transactional
     public MovieDTO createMovie(CreateMovieRequest request) {
@@ -172,14 +177,35 @@ public class MovieService {
         dto.setSynopsis(movie.getSynopsis());
         dto.setAverageRating(movie.getAverageRating());
         dto.setPosterUrl(movie.getPosterUrl());
+        // if (movie.getCast() != null) {
+        // dto.setActorNames(movie.getCast().stream().map(Actor::getName).collect(Collectors.toSet()));
+        // dto.setActorIds(movie.getCast().stream().map(Actor::getId).collect(Collectors.toSet()));
+        // }
+        // if (movie.getDirectors() != null) {
+        // dto.setDirectorNames(movie.getDirectors().stream().map(Director::getName).collect(Collectors.toSet()));
+        // dto.setDirectorIds(movie.getDirectors().stream().map(Director::getId).collect(Collectors.toSet()));
+        // }
+
         if (movie.getCast() != null) {
-            dto.setActorNames(movie.getCast().stream().map(Actor::getName).collect(Collectors.toSet()));
-            dto.setActorIds(movie.getCast().stream().map(Actor::getId).collect(Collectors.toSet()));
+            dto.setCast(movie.getCast().stream()
+                    .map(actor -> new PersonInfoDTO(actor.getId(), actor.getName(), actor.getProfileImageUrl()))
+                    .collect(Collectors.toList()));
         }
         if (movie.getDirectors() != null) {
-            dto.setDirectorNames(movie.getDirectors().stream().map(Director::getName).collect(Collectors.toSet()));
-            dto.setDirectorIds(movie.getDirectors().stream().map(Director::getId).collect(Collectors.toSet()));
+            dto.setDirectors(movie.getDirectors().stream()
+                    .map(director -> new PersonInfoDTO(director.getId(), director.getName(),
+                            director.getProfileImageUrl()))
+                    .collect(Collectors.toList()));
         }
+        List<RatingDistributionDTO> distribution = userRatingRepository.getRatingDistributionForMovie(movie.getId());
+        long totalRatings = distribution.stream().mapToLong(RatingDistributionDTO::getCount).sum();
+
+        if (totalRatings > 0) {
+            for (RatingDistributionDTO dist : distribution) {
+                dist.setPercentage(Math.round((double) dist.getCount() / totalRatings * 1000) / 10.0);
+            }
+        }
+        dto.setRatingDistribution(distribution);
         return dto;
     }
 }

@@ -9,6 +9,7 @@ import com.movie_back.backend.exception.ResourceNotFoundException;
 import com.movie_back.backend.repository.MovieRepository;
 import com.movie_back.backend.repository.UserRepository;
 import com.movie_back.backend.repository.UserRatingRepository;
+import org.springframework.context.annotation.Lazy; // <--- 引入 @Lazy
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,8 +23,9 @@ public class UserRatingService {
     private final UserRepository userRepository;
     private final MovieService movieService; // 用于触发平均分更新
 
+    // 在构造函数参数上添加 @Lazy 注解
     public UserRatingService(UserRatingRepository userRatingRepository, MovieRepository movieRepository,
-            UserRepository userRepository, MovieService movieService) {
+            UserRepository userRepository, @Lazy MovieService movieService) { // <--- 在这里添加 @Lazy
         this.userRatingRepository = userRatingRepository;
         this.movieRepository = movieRepository;
         this.userRepository = userRepository;

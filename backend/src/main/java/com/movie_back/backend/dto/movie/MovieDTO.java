@@ -1,7 +1,11 @@
 package com.movie_back.backend.dto.movie;
 
 import lombok.Data;
-import java.util.Set;
+
+import java.util.List;
+// import java.util.Set;
+
+import com.movie_back.backend.dto.PersonInfoDTO;
 
 @Data
 public class MovieDTO {
@@ -15,8 +19,11 @@ public class MovieDTO {
     private String synopsis;
     private Double averageRating;
     private String posterUrl;
-    private Set<Long> actorIds; // 用于创建/更新时关联演员
-    private Set<String> actorNames; // 用于展示
-    private Set<Long> directorIds; // 用于创建/更新时关联导演
-    private Set<String> directorNames; // 用于展示
+    // private Set<Long> actorIds; // 用于创建/更新时关联演员
+    // private Set<String> actorNames; // 用于展示
+    // private Set<Long> directorIds; // 用于创建/更新时关联导演
+    // private Set<String> directorNames; // 用于展示
+    private List<PersonInfoDTO> cast; // <--- 修改点
+    private List<PersonInfoDTO> directors; // <--- 修改点
+    private List<RatingDistributionDTO> ratingDistribution;
 }

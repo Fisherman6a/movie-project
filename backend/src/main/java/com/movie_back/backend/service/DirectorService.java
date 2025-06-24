@@ -5,6 +5,8 @@ import com.movie_back.backend.entity.Director;
 import com.movie_back.backend.exception.ResourceNotFoundException;
 import com.movie_back.backend.repository.DirectorRepository;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +18,9 @@ import java.util.stream.Collectors;
 public class DirectorService {
 
     private final DirectorRepository directorRepository;
+
+    @Value("${default.person.image.url}")
+    private String defaultPersonImageUrl;
 
     @Transactional
     public DirectorDTO createDirector(DirectorDTO directorDTO) {
@@ -70,6 +75,13 @@ public class DirectorService {
         dto.setBirthDate(director.getBirthDate());
         dto.setNationality(director.getNationality());
         dto.setProfileImageUrl(director.getProfileImageUrl());
+
+        if (director.getProfileImageUrl() == null || director.getProfileImageUrl().isEmpty()) {
+            dto.setProfileImageUrl(defaultPersonImageUrl);
+        } else {
+            dto.setProfileImageUrl(director.getProfileImageUrl());
+        }
+
         return dto;
     }
 }

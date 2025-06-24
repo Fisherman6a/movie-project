@@ -1,27 +1,64 @@
 <template>
     <n-form ref="formRef" :model="model" :rules="rules" label-placement="left" label-width="80">
-        <n-form-item label="姓名" path="name">
-            <n-input v-model:value="model.name" placeholder="输入姓名" />
+        <n-form-item label="标题" path="title">
+            <n-input v-model:value="model.title" placeholder="输入电影标题" />
         </n-form-item>
-        <n-form-item label="性别" path="gender">
-            <n-input v-model:value="model.gender" placeholder="输入性别" />
+        <n-form-item label="年份" path="releaseYear">
+            <n-input-number v-model:value="model.releaseYear" placeholder="输入发行年份" style="width: 100%;" />
         </n-form-item>
-        <n-form-item label="国籍" path="nationality">
-            <n-input v-model:value="model.nationality" placeholder="输入国籍" />
+        <n-form-item label="时长" path="duration">
+            <n-input-number v-model:value="model.duration" placeholder="输入电影时长（分钟）" style="width: 100%;">
+                <template #suffix>
+                    分钟
+                </template>
+            </n-input-number>
         </n-form-item>
-        <n-form-item label="生日" path="birthDate">
-            <n-date-picker v-model:formatted-value="model.birthDate" value-format="yyyy-MM-dd" type="date"
-                style="width: 100%;" />
+        <n-form-item label="类型" path="genre">
+            <n-input v-model:value="model.genre" placeholder="例如：科幻, 动作" />
         </n-form-item>
-        <n-form-item label="头像URL" path="profileImageUrl">
-            <n-input v-model:value="model.profileImageUrl" placeholder="输入头像图片链接" />
+        <n-form-item label="国家" path="country">
+            <n-input v-model:value="model.country" placeholder="例如：美国 / 中国大陆" />
+        </n-form-item>
+        <n-form-item label="语言" path="language">
+            <n-input v-model:value="model.language" placeholder="例如：英语" />
+        </n-form-item>
+
+        <n-form-item label="海报" path="posterUrl">
+            <n-space vertical>
+                <n-avatar v-if="model.posterUrl" :size="96" :src="model.posterUrl" object-fit="cover" />
+                <n-upload :custom-request="handleUpload" :show-file-list="false" :max="1" accept="image/*">
+                    <n-button :loading="uploading">
+                        <template #icon>
+                            <n-icon :component="CloudUploadIcon" />
+                        </template>
+                        上传图片
+                    </n-button>
+                </n-upload>
+                <n-input v-model:value="model.posterUrl" placeholder="或直接粘贴图片链接" />
+            </n-space>
+        </n-form-item>
+
+        <n-form-item label="演员" path="actorIds">
+            <n-select v-model:value="model.actorIds" multiple filterable placeholder="选择参演演员" :options="actorOptions"
+                :loading="loadingActors" />
+        </n-form-item>
+        <n-form-item label="导演" path="directorIds">
+            <n-select v-model:value="model.directorIds" multiple filterable placeholder="选择导演"
+                :options="directorOptions" :loading="loadingDirectors" />
+        </n-form-item>
+        <n-form-item label="简介" path="synopsis">
+            <n-input v-model:value="model.synopsis" type="textarea" placeholder="输入电影简介"
+                :autosize="{ minRows: 3, maxRows: 5 }" />
         </n-form-item>
     </n-form>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
-import { NForm, NFormItem, NInput, NDatePicker } from 'naive-ui';
+import { ref, onMounted, watch } from 'vue';
+import { NForm, NFormItem, NInput, NInputNumber, NSelect, NSpace, NAvatar, NUpload, NButton, NIcon, useMessage } from 'naive-ui';
+import { CloudUploadOutline as CloudUploadIcon } from '@vicons/ionicons5';
+import apiService from '@/services/apiService';
+import axios from 'axios';
 
 const props = defineProps({
     modelValue: {
@@ -31,11 +68,20 @@ const props = defineProps({
 });
 const emit = defineEmits(['update:modelValue']);
 
+const message = useMessage();
 const formRef = ref(null);
 const model = ref({});
+const uploading = ref(false);
+
+const actorOptions = ref([]);
+const directorOptions = ref([]);
+const loadingActors = ref(false);
+const loadingDirectors = ref(false);
 
 const rules = {
-    name: { required: true, message: '请输入姓名', trigger: 'blur' },
+    title: { required: true, message: '请输入标题', trigger: 'blur' },
+    releaseYear: { type: 'number', required: true, message: '请输入年份', trigger: 'blur' },
+    posterUrl: { required: true, message: '请上传或提供海报链接', trigger: 'blur' },
 };
 
 watch(() => props.modelValue, (newValue) => {
@@ -46,8 +92,46 @@ watch(model, (newValue) => {
     emit('update:modelValue', newValue);
 }, { deep: true });
 
-const validate = (callback) => {
-    formRef.value.validate(callback);
+const handleUpload = async ({ file, onFinish, onError }) => {
+    uploading.value = true;
+    const formData = new FormData();
+    formData.append("image", file.file);
+    formData.append("key", "4312ec520960fe609d17eb3f8a99ca5e"); // 你的 ImgBB API Key
+
+    try {
+        const response = await axios.post("https://api.imgbb.com/1/upload", formData);
+        model.value.posterUrl = response.data.data.url;
+        message.success("上传成功！");
+        onFinish();
+    } catch (error) {
+        message.error("上传失败: " + (error.response?.data?.error?.message || error.message));
+        onError();
+    } finally {
+        uploading.value = false;
+    }
+};
+
+onMounted(async () => {
+    loadingActors.value = true;
+    loadingDirectors.value = true;
+    try {
+        const [actorsRes, directorsRes] = await Promise.all([
+            apiService.getAllActors(),
+            apiService.getAllDirectors()
+        ]);
+        actorOptions.value = actorsRes.data.map(a => ({ label: a.name, value: a.id }));
+        directorOptions.value = directorsRes.data.map(d => ({ label: d.name, value: d.id }));
+    } catch (error) {
+        console.error("Failed to load actors/directors", error);
+        message.error("加载演员或导演列表失败");
+    } finally {
+        loadingActors.value = false;
+        loadingDirectors.value = false;
+    }
+});
+
+const validate = () => { // <--- 移除 callback 参数
+    return formRef.value.validate(); // <--- 直接返回 n-form 的 validate() Promise
 };
 
 defineExpose({ validate });
