@@ -6,7 +6,7 @@ import com.movie_back.backend.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod; // 确保导入 HttpMethod
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -25,7 +25,7 @@ import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity(prePostEnabled = true) // 确保 @PreAuthorize 注解生效
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -61,22 +61,23 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // ↓↓↓ 新增：明确允许所有OPTIONS预检请求 ↓↓↓
+                        // 允许所有浏览器的 OPTIONS 预检请求
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // 公开访问的端点
+
+                        // 定义无需认证即可访问的公开端点
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        // .requestMatchers("/images/**").permitAll()
+
+                        // 允许对电影、演员、导演信息的 GET 请求
                         .requestMatchers(HttpMethod.GET, "/api/movies/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/actors/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/directors/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/movies", "/api/actors", "/api/directors")
-                        .hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/movies/**", "/api/actors/**", "/api/directors/**")
-                        .hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/movies/**", "/api/actors/**", "/api/directors/**")
-                        .hasRole("ADMIN")
-                        // 其他所有请求都需要认证
+
+                        // 修复：允许公开访问用户评论列表
+                        .requestMatchers(HttpMethod.GET, "/api/users/{userId}/reviews").permitAll()
+
+                        // 除以上定义的公开路径外，所有其他请求都需要认证
+                        // 更具体的角色权限已由 Controller 中的 @PreAuthorize 注解处理
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
