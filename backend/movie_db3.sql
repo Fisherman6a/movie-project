@@ -66,7 +66,6 @@ SELECT
     r.score,
     r.likes,
     r.created_at,
-    r.updated_at,
     u.id AS user_id,
     u.username,
     u.profile_image_url,

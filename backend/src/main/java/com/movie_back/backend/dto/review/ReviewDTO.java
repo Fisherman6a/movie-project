@@ -13,7 +13,7 @@ public class ReviewDTO { // 用于展示
     private String userProfileImageUrl;
     private String commentText;
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    // private LocalDateTime updatedAt;
     private Integer score; // 确保有 score 字段
     private Integer likes;
 }

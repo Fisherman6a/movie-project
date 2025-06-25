@@ -5,10 +5,13 @@ import com.movie_back.backend.dto.review.ReviewRequest;
 import com.movie_back.backend.entity.Movie;
 import com.movie_back.backend.entity.Review;
 import com.movie_back.backend.entity.User;
+import com.movie_back.backend.entity.VReviewDetail;
 import com.movie_back.backend.exception.ResourceNotFoundException;
 import com.movie_back.backend.repository.MovieRepository;
 import com.movie_back.backend.repository.ReviewRepository;
 import com.movie_back.backend.repository.UserRepository;
+import com.movie_back.backend.repository.VReviewDetailRepository;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,18 +25,22 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final MovieRepository movieRepository;
     private final UserRepository userRepository;
+    private final VReviewDetailRepository vReviewDetailRepository;
 
     public ReviewService(ReviewRepository reviewRepository, MovieRepository movieRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository, VReviewDetailRepository vReviewDetailRepository) {
         this.reviewRepository = reviewRepository;
         this.movieRepository = movieRepository;
         this.userRepository = userRepository;
+        this.vReviewDetailRepository = vReviewDetailRepository;
     }
 
     @Transactional(readOnly = true)
     public List<ReviewDTO> getAllReviews() {
-        return reviewRepository.findAll().stream()
-                .map(this::convertToReviewDTO)
+        // 使用新的 Repository 查询视图
+        return vReviewDetailRepository.findAll().stream()
+                // 使用新的转换方法
+                .map(this::convertVReviewToDTO)
                 .sorted(Comparator.comparing(ReviewDTO::getCreatedAt).reversed())
                 .collect(Collectors.toList());
     }
@@ -122,13 +129,29 @@ public class ReviewService {
                 .collect(Collectors.toList());
     }
 
+    // 该转换方法用于处理来自视图的数据
+    private ReviewDTO convertVReviewToDTO(VReviewDetail vReview) {
+        ReviewDTO dto = new ReviewDTO();
+        dto.setId(vReview.getReviewId());
+        dto.setCommentText(vReview.getCommentText());
+        dto.setScore(vReview.getScore());
+        dto.setLikes(vReview.getLikes());
+        dto.setCreatedAt(vReview.getCreatedAt());
+        dto.setMovieId(vReview.getMovieId());
+        dto.setMovieTitle(vReview.getMovieTitle());
+        dto.setUserId(vReview.getUserId());
+        dto.setUsername(vReview.getUsername());
+        dto.setUserProfileImageUrl(vReview.getUserProfileImageUrl());
+        return dto;
+    }
+
     private ReviewDTO convertToReviewDTO(Review review) {
         ReviewDTO dto = new ReviewDTO();
         dto.setId(review.getId());
         dto.setCommentText(review.getCommentText());
         dto.setScore(review.getScore());
         dto.setCreatedAt(review.getCreatedAt());
-        dto.setUpdatedAt(review.getUpdatedAt());
+        // dto.setUpdatedAt(review.getUpdatedAt());
         dto.setLikes(review.getLikes());
 
         // 为了保证在不同调用场景下都能正确填充信息
