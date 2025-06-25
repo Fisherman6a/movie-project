@@ -85,11 +85,14 @@ const latestMovies = ref([]);
 const loading = ref(true);
 
 const carouselSlides = ref([
-  { id: 1, image: 'https://picsum.photos/seed/carousel_scene_1/1200/400' },
-  { id: 2, image: 'https://picsum.photos/seed/carousel_scene_2/1200/400' },
-  { id: 3, image: 'https://picsum.photos/seed/carousel_scene_3/1200/400' },
+  {
+    id: 1, image: 'https://i.ibb.co/FbFz1v2s/pexels-pixabay-274937.jpg'
+  },
+  { id: 2, image: 'https://i.ibb.co/NgdsQg4v/pexels-markusspiske-4201333.jpg' },
+  {
+    id: 3, image: 'https://i.ibb.co/W4g4P1Fp/pexels-tima-miroshnichenko-7991158.jpg'
+  },
 ]);
-
 const fetchHomePageMovies = async () => {
   loading.value = true;
   try {

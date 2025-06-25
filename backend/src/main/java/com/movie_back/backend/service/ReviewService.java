@@ -9,7 +9,6 @@ import com.movie_back.backend.exception.ResourceNotFoundException;
 import com.movie_back.backend.repository.MovieRepository;
 import com.movie_back.backend.repository.ReviewRepository;
 import com.movie_back.backend.repository.UserRepository;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,14 +22,12 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final MovieRepository movieRepository;
     private final UserRepository userRepository;
-    private final MovieService movieService;
 
     public ReviewService(ReviewRepository reviewRepository, MovieRepository movieRepository,
-            UserRepository userRepository, @Lazy MovieService movieService) {
+            UserRepository userRepository) {
         this.reviewRepository = reviewRepository;
         this.movieRepository = movieRepository;
         this.userRepository = userRepository;
-        this.movieService = movieService;
     }
 
     @Transactional(readOnly = true)
@@ -65,7 +62,6 @@ public class ReviewService {
         if (reviewRepository.findByMovieIdAndUserId(movieId, userId).isPresent()) {
             throw new IllegalStateException("您已经评论过这部电影了。");
         }
-
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new ResourceNotFoundException("未找到 ID 为 " + movieId + " 的电影"));
         User user = userRepository.findById(userId)
@@ -77,48 +73,33 @@ public class ReviewService {
         review.setCommentText(reviewRequest.getCommentText());
         review.setScore(reviewRequest.getScore());
 
-        reviewRepository.save(review);
-
-        // 评论保存后，调用 MovieService 更新平均分
-        movieService.updateMovieAverageRating(movieId);
-
-        return convertToReviewDTO(review);
+        Review savedReview = reviewRepository.save(review);
+        return convertToReviewDTO(savedReview);
     }
 
     @Transactional
     public ReviewDTO updateReview(Long reviewId, ReviewRequest reviewRequest) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ResourceNotFoundException("未找到 ID 为 " + reviewId + " 的评论"));
-
         review.setCommentText(reviewRequest.getCommentText());
         review.setScore(reviewRequest.getScore());
 
         Review updatedReview = reviewRepository.save(review);
-
-        // 更新后也要重新计算平均分
-        movieService.updateMovieAverageRating(review.getMovie().getId());
-
         return convertToReviewDTO(updatedReview);
     }
 
     @Transactional
     public void deleteReview(Long reviewId) {
-        Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new ResourceNotFoundException("未找到 ID 为 " + reviewId + " 的评论"));
-
-        Long movieId = review.getMovie().getId();
-
-        reviewRepository.delete(review);
-
-        // 删除后也要更新平均分
-        movieService.updateMovieAverageRating(movieId);
+        if (!reviewRepository.existsById(reviewId)) {
+            throw new ResourceNotFoundException("未找到 ID 为 " + reviewId + " 的评论");
+        }
+        reviewRepository.deleteById(reviewId);
     }
 
     @Transactional
     public ReviewDTO voteOnReview(Long reviewId, String direction) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ResourceNotFoundException("未找到 ID 为 " + reviewId + " 的评论"));
-
         if ("up".equalsIgnoreCase(direction)) {
             review.setLikes(review.getLikes() + 1);
         } else if ("down".equalsIgnoreCase(direction)) {
@@ -126,9 +107,19 @@ public class ReviewService {
         } else {
             throw new IllegalArgumentException("无效的投票方向，必须是 'up' 或 'down'");
         }
-
         Review savedReview = reviewRepository.save(review);
         return convertToReviewDTO(savedReview);
+    }
+
+    // 新增调用存储过程的服务方法
+    @Transactional(readOnly = true)
+    public List<ReviewDTO> getReviewsByMovieTitleFromProcedure(String movieTitle) {
+        List<Review> reviews = reviewRepository.findReviewsByMovieTitleProcedure(movieTitle);
+        // 注意：存储过程返回的实体可能不完整，转换DTO时需要处理潜在的Null值
+        // 但在我们这个例子中，存储过程返回的Review是完整的，所以可以直接转换
+        return reviews.stream()
+                .map(this::convertToReviewDTO)
+                .collect(Collectors.toList());
     }
 
     private ReviewDTO convertToReviewDTO(Review review) {
@@ -138,12 +129,18 @@ public class ReviewService {
         dto.setScore(review.getScore());
         dto.setCreatedAt(review.getCreatedAt());
         dto.setUpdatedAt(review.getUpdatedAt());
-        dto.setMovieId(review.getMovie().getId());
-        dto.setMovieTitle(review.getMovie().getTitle());
-        dto.setUserId(review.getUser().getId());
-        dto.setUsername(review.getUser().getUsername());
-        dto.setUserProfileImageUrl(review.getUser().getProfileImageUrl());
         dto.setLikes(review.getLikes());
+
+        // 为了保证在不同调用场景下都能正确填充信息
+        if (review.getMovie() != null) {
+            dto.setMovieId(review.getMovie().getId());
+            dto.setMovieTitle(review.getMovie().getTitle());
+        }
+        if (review.getUser() != null) {
+            dto.setUserId(review.getUser().getId());
+            dto.setUsername(review.getUser().getUsername());
+            dto.setUserProfileImageUrl(review.getUser().getProfileImageUrl());
+        }
         return dto;
     }
 }

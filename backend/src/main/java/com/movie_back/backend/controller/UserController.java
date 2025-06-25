@@ -1,9 +1,12 @@
 package com.movie_back.backend.controller;
 
+import com.movie_back.backend.dto.user.PasswordChangeRequest;
 import com.movie_back.backend.dto.user.UserDTO;
 import com.movie_back.backend.dto.user.UserProfileUpdateDTO;
 import com.movie_back.backend.entity.User;
 import com.movie_back.backend.service.UserService;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -53,8 +56,17 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
+    // **核心修正3**: 新增修改密码的端点
+    @PutMapping("/me/password")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> changePassword(
+            @AuthenticationPrincipal User currentUser,
+            @Valid @RequestBody PasswordChangeRequest request) {
+        userService.changeUserPassword(currentUser, request.getOldPassword(), request.getNewPassword());
+        return ResponseEntity.ok().build();
+    }
 
-        // 获取所有用户 - 仅限管理员
+    // 获取所有用户 - 仅限管理员
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UserDTO>> getAllUsers() {

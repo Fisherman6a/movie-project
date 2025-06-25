@@ -136,4 +136,8 @@ export default {
     deleteUser(id) {
         return apiClient.delete(`/users/${id}`);
     },
+    changePassword(passwordData) {
+        return apiClient.put('/users/me/password', passwordData);
+    },
+
 };

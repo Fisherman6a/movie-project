@@ -107,70 +107,44 @@ const router = useRouter();
 const loading = ref(true);
 const movies = ref([]);
 
-// --- 筛选数据模型 ---
-
-// 筛选标签数据
 const genreTags = [
-  { label: "全部", value: null },
-  { label: "剧情", value: "剧情" },
-  { label: "喜剧", value: "喜剧" },
-  { label: "科幻", value: "科幻" },
-  { label: "动作", value: "动作" },
-  { label: "爱情", value: "爱情" },
-  { label: "动画", value: "动画" },
-  { label: "悬疑", value: "悬疑" },
-  { label: "惊悚", value: "惊悚" },
+  { label: "全部", value: null }, { label: "剧情", value: "剧情" }, { label: "喜剧", value: "喜剧" },
+  { label: "科幻", value: "科幻" }, { label: "动作", value: "动作" }, { label: "爱情", value: "爱情" },
+  { label: "动画", value: "动画" }, { label: "悬疑", value: "悬疑" }, { label: "惊悚", value: "惊悚" },
 ];
+
 const countryTags = [
-  { label: "全部", value: null },
-  { label: "中国大陆", value: "中国大陆" },
-  { label: "美国", value: "美国" },
-  { label: "日本", value: "日本" },
-  { label: "韩国", value: "韩国" },
-  { label: "英国", value: "英国" },
+  { label: "全部", value: null }, { label: "中国", value: "中国" }, { label: "美国", value: "美国" },
+  { label: "英国", value: "英国" }, { label: "日本", value: "日本" }, { label: "韩国", value: "韩国" },
 ];
+
 const yearTags = [
-  { label: "全部", value: null },
-  { label: "2024", value: "2024" },
-  { label: "2023", value: "2023" },
-  { label: "2022", value: "2022" },
-  { label: "2010年代", value: "2010s" },
-  { label: "2000年代", value: "2000s" },
+  { label: "全部", value: null }, { label: "2024", value: "2024" }, { label: "2023", value: "2023" },
+  { label: "2022", value: "2022" }, { label: "2010年代", value: "2010s" }, { label: "2000年代", value: "2000s" },
 ];
 
-// 筛选参数
 const filterParams = ref({
-  genre: null,
-  country: null,
-  releaseYear: null,
-  sortBy: "averageRating", // 默认按热门排序
-  sortDir: "desc",
+  genre: null, country: null, releaseYear: null,
+  sortBy: "averageRating", sortDir: "desc",
+  yearStart: null, yearEnd: null,
 });
 
-// 顶部快速筛选状态
 const quickFilter = ref("hot");
+const pagination = ref({ page: 1, pageSize: 20, pageCount: 1 });
 
-// 分页参数
-const pagination = ref({
-  page: 1,
-  pageSize: 20,
-  pageCount: 1,
-});
-
-// --- 方法 ---
-
-// 核心数据获取函数
 const fetchData = async () => {
   loading.value = true;
+  // 在准备发送给后端的参数时，我们不需要 releaseYear，只需要 yearStart/yearEnd
+  // eslint-disable-next-line no-unused-vars
+  const { releaseYear, ...apiParams } = filterParams.value;
   const params = {
     ...Object.fromEntries(
-      Object.entries(filterParams.value).filter(
-        ([, v]) => v !== null && v !== ""
-      )
+      Object.entries(apiParams).filter(([, v]) => v !== null && v !== "")
     ),
     page: pagination.value.page - 1,
     size: pagination.value.pageSize,
   };
+
   try {
     const response = await apiService.getLatestMovies(params);
     movies.value = response.data.content;
@@ -182,67 +156,74 @@ const fetchData = async () => {
   }
 };
 
-// 点击标签进行筛选, 更新路由
 const selectFilter = (key, value) => {
   const newQuery = { ...route.query };
-  delete newQuery.quickFilter; // 清除快速筛选
-  delete newQuery.page; // 重置分页
+  delete newQuery.quickFilter;
+  delete newQuery.page;
 
-  // 如果点击的是已选中的标签，则取消选择
+  delete newQuery.releaseYear;
+  delete newQuery.yearStart;
+  delete newQuery.yearEnd;
+
+  // 如果点击的是当前已选中的，则取消选择
   if (filterParams.value[key] === value) {
-    delete newQuery[key];
+    // 这部分逻辑对于年份/年代有点特殊，但对于类型/国家是正确的
+    // 暂定：点击已选中的标签就取消它
+    // 此处我们依赖 watcher 来同步状态，所以直接清空相关 query
+  } else if (key === 'releaseYear') {
+    if (value === '2010s') {
+      newQuery.yearStart = 2010;
+      newQuery.yearEnd = 2019;
+    } else if (value === '2000s') {
+      newQuery.yearStart = 2000;
+      newQuery.yearEnd = 2009;
+    } else if (value) {
+      newQuery.releaseYear = value;
+    }
   } else {
     newQuery[key] = value;
   }
   router.push({ query: newQuery });
 };
 
-// 点击顶部快速筛选, 更新路由
-const handleQuickFilter = (type) => {
-  router.push({ query: { quickFilter: type } });
-};
+const handleQuickFilter = (type) => { router.push({ query: { quickFilter: type } }); };
+const handlePageChange = (currentPage) => { router.push({ query: { ...route.query, page: currentPage } }); };
 
-// 处理分页变化, 更新路由
-const handlePageChange = (currentPage) => {
-  router.push({ query: { ...route.query, page: currentPage } });
-};
+watch(() => route.query, (query) => {
+  pagination.value.page = query.page ? Number(query.page) : 1;
+  quickFilter.value = query.quickFilter || "";
 
-// 监听路由 query 的变化来更新筛选条件并重新获取数据
-watch(
-  () => route.query,
-  (query) => {
-    // 1. 从 URL 更新组件内部状态
-    pagination.value.page = query.page ? Number(query.page) : 1;
-    quickFilter.value = query.quickFilter || "";
-    filterParams.value.genre = query.genre || null;
-    filterParams.value.country = query.country || null;
-    filterParams.value.releaseYear = query.releaseYear || null;
+  // 更新筛选参数
+  filterParams.value.genre = query.genre || null;
+  filterParams.value.country = query.country || null;
+  filterParams.value.releaseYear = query.releaseYear || null;
+  filterParams.value.yearStart = query.yearStart || null;
+  filterParams.value.yearEnd = query.yearEnd || null;
 
-    // 2. 根据状态设置排序规则
-    if (quickFilter.value === "all") {
-      filterParams.value.sortBy = "title";
-      filterParams.value.sortDir = "asc";
-    } else if (quickFilter.value === "latest") {
-      filterParams.value.sortBy = "releaseYear";
-      filterParams.value.sortDir = "desc";
-    } else {
-      // 默认 (hot, top_rated) 或详细筛选时，都按评分排序
-      filterParams.value.sortBy = "averageRating";
-      filterParams.value.sortDir = "desc";
+  // **核心修正**: 根据URL参数反向设置高亮状态
+  if (!filterParams.value.releaseYear) {
+    if (filterParams.value.yearStart == '2010' && filterParams.value.yearEnd == '2019') {
+      filterParams.value.releaseYear = '2010s';
+    } else if (filterParams.value.yearStart == '2000' && filterParams.value.yearEnd == '2009') {
+      filterParams.value.releaseYear = '2000s';
     }
-
-    // 3. 处理无任何筛选条件的默认情况
-    if (Object.keys(query).length === 0) {
-      quickFilter.value = "hot"; // 默认高亮“热门电影”
-    }
-
-    // 4. 获取数据
-    fetchData();
-  },
-  {
-    immediate: true, // 关键：组件挂载时立即执行一次 watcher
-    deep: true,
   }
+
+  // 根据状态设置排序规则
+  if (quickFilter.value === "all") {
+    filterParams.value.sortBy = "title";
+    filterParams.value.sortDir = "asc";
+  } else if (quickFilter.value === "latest") {
+    filterParams.value.sortBy = "releaseYear";
+    filterParams.value.sortDir = "desc";
+  } else {
+    filterParams.value.sortBy = "averageRating";
+    filterParams.value.sortDir = "desc";
+  }
+
+  if (Object.keys(query).length === 0) { quickFilter.value = "hot"; }
+  fetchData();
+}, { immediate: true, deep: true, }
 );
 </script>
 

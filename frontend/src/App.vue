@@ -5,7 +5,6 @@
         <n-layout style="min-height: 100vh;">
           <TheHeader />
 
-
           <div class="main-content-container">
             <router-view />
             <TheFooter />

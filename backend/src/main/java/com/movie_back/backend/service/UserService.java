@@ -98,6 +98,24 @@ public class UserService implements UserDetailsService {
         return convertToDTO(updatedUser); // convertToDTO 也需要更新以包含新字段
     }
 
+    // 用户更新密码
+    @Transactional
+    public void changeUserPassword(User currentUser, String oldPassword, String newPassword) {
+        // 1. 验证旧密码是否正确
+        if (!passwordEncoder.matches(oldPassword, currentUser.getPassword())) {
+            // 在实际应用中，可以定义一个更具体的异常类型
+            throw new IllegalStateException("旧密码不正确");
+        }
+        // 2. 将新密码加密
+        String encodedNewPassword = passwordEncoder.encode(newPassword);
+
+        // 3. 更新用户密码
+        currentUser.setPassword(encodedNewPassword);
+
+        // 4. 保存到数据库
+        userRepository.save(currentUser);
+    }
+
     private UserDTO convertToDTO(User user) {
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());

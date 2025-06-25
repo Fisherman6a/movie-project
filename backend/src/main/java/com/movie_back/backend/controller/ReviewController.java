@@ -22,11 +22,11 @@ public class ReviewController {
         this.reviewService = reviewService;
     }
 
-    // **核心修改 1**: 简化了 addReviewToMovie 接口
     @PostMapping("/movies/{movieId}/reviews")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ReviewDTO> addReviewToMovie(
             @PathVariable Long movieId,
-            @RequestParam Long userId, // 在真实应用中，应从安全上下文中获取
+            @RequestParam Long userId,
             @Valid @RequestBody ReviewRequest reviewRequest) {
         ReviewDTO createdReview = reviewService.addReview(movieId, userId, reviewRequest);
         return new ResponseEntity<>(createdReview, HttpStatus.CREATED);
@@ -45,13 +45,14 @@ public class ReviewController {
     }
 
     @DeleteMapping("/reviews/{reviewId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteReview(@PathVariable Long reviewId) {
         reviewService.deleteReview(reviewId);
         return ResponseEntity.noContent().build();
     }
 
-    // **核心修改 2**: 简化了 updateReview 接口
     @PutMapping("/reviews/{reviewId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ReviewDTO> updateReview(
             @PathVariable Long reviewId,
             @Valid @RequestBody ReviewRequest reviewRequest) {
@@ -70,9 +71,16 @@ public class ReviewController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ReviewDTO> voteOnReview(
             @PathVariable Long reviewId,
-            @RequestBody Map<String, String> payload) { // 使用 Map 接收简单的 JSON
+            @RequestBody Map<String, String> payload) {
         String direction = payload.get("direction");
         ReviewDTO updatedReview = reviewService.voteOnReview(reviewId, direction);
         return ResponseEntity.ok(updatedReview);
+    }
+
+    // **核心修正**: 新增API端点以调用存储过程
+    @GetMapping("/movies/title/{movieTitle}/reviews_procedure")
+    public ResponseEntity<List<ReviewDTO>> getReviewsByMovieTitleProcedure(@PathVariable String movieTitle) {
+        List<ReviewDTO> reviews = reviewService.getReviewsByMovieTitleFromProcedure(movieTitle);
+        return ResponseEntity.ok(reviews);
     }
 }

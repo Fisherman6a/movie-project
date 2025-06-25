@@ -52,13 +52,16 @@ public class MovieController {
             @RequestParam(required = false) String genre,
             @RequestParam(required = false) String country,
             @RequestParam(required = false) Double minRating,
+            @RequestParam(required = false) Integer yearStart,
+            @RequestParam(required = false) Integer yearEnd,
             @RequestParam(defaultValue = "title") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<MovieDTO> movies = movieService.searchMovies(title, releaseYear, genre, country, minRating, sortBy,
-                sortDir, page,
-                size);
+        Page<MovieDTO> movies = movieService.searchMovies(
+                title, releaseYear, genre, country, minRating,
+                yearStart, yearEnd,
+                sortBy, sortDir, page, size);
         return ResponseEntity.ok(movies);
     }
 

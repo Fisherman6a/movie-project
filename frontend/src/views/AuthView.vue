@@ -53,21 +53,19 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import {
-  // 移除了 NLayout
   NCard, NTabs, NTabPane, NForm, NFormItemRow,
   NInput, NButton, NFlex, useMessage
 } from 'naive-ui';
 import { useAuthStore } from '@/stores/authStore';
 import apiService from '@/services/apiService';
 
-//   const props = defineProps({
-//       defaultTab: {
-//           type: String,
-//           default: 'signin'
-//       }
-//   });
+defineProps({
+  defaultTab: {
+    type: String,
+    default: 'signin'
+  }
+});
 
-// --- script 部分的登录和注册逻辑保持不变 ---
 const router = useRouter();
 const message = useMessage();
 const authStore = useAuthStore();
@@ -81,24 +79,30 @@ const loginRules = {
   username: { required: true, message: '请输入用户名', trigger: 'blur' },
   password: { required: true, message: '请输入密码', trigger: 'blur' },
 };
-const handleLogin = (e) => {
+
+const handleLogin = async (e) => {
   e.preventDefault();
-  loginFormRef.value?.validate(async (errors) => {
-    if (!errors) {
-      loginLoading.value = true;
-      try {
-        const response = await apiService.login(loginFormValue.value);
-        authStore.setAuth(response.data);
-        message.success('登录成功！');
-        router.push('/');
-      } catch (error) {
-        message.error(error.response?.data?.message || '登录失败，请检查用户名或密码');
-      } finally {
-        loginLoading.value = false;
-      }
+  try {
+    await loginFormRef.value?.validate();
+    loginLoading.value = true;
+    const response = await apiService.login(loginFormValue.value);
+    authStore.setAuth(response.data);
+    message.success('登录成功！');
+    router.push('/');
+  } catch (errors) {
+    console.log('登录表单验证失败或API出错', errors);
+    if (errors && Array.isArray(errors)) {
+      message.error('请输入用户名和密码。');
+    } else if (errors.response) {
+      message.error(errors.response.data.message || '登录失败，请检查您的凭据');
+    } else {
+      message.error('发生未知错误');
     }
-  });
+  } finally {
+    loginLoading.value = false;
+  }
 };
+
 const registerFormRef = ref(null);
 const registerLoading = ref(false);
 const registerFormValue = ref({
@@ -122,42 +126,42 @@ const registerRules = {
     { validator: validatePasswordSame, trigger: 'blur' }
   ]
 };
-const handleRegister = (e) => {
-  e.preventDefault();
-  registerFormRef.value?.validate(async (errors) => {
-    if (!errors) {
-      registerLoading.value = true;
-      try {
-        const payload = {
-          username: registerFormValue.value.username,
-          email: registerFormValue.value.email,
-          password: registerFormValue.value.password,
-        };
-        await apiService.register(payload);
-        message.success('注册成功，请登录！');
-        router.push('/login');
-      } catch (error) {
-        message.error(error.response?.data?.message || '注册失败');
-      } finally {
-        registerLoading.value = false;
-      }
-    }
-  });
-};
 
+const handleRegister = async (e) => {
+  e.preventDefault();
+  try {
+    await registerFormRef.value?.validate();
+    registerLoading.value = true;
+    const payload = {
+      username: registerFormValue.value.username,
+      email: registerFormValue.value.email,
+      password: registerFormValue.value.password,
+    };
+    await apiService.register(payload);
+    message.success('注册成功，请登录！');
+    router.push('/login');
+  } catch (errors) {
+    console.log('注册表单验证失败或API出错', errors);
+    if (errors && Array.isArray(errors)) {
+      message.error('请检查所有字段是否填写正确。');
+    } else if (errors.response) {
+      message.error(errors.response.data.message || '注册失败');
+    } else {
+      message.error('发生未知错误');
+    }
+  } finally {
+    registerLoading.value = false;
+  }
+};
 </script>
 
 <style scoped>
-/* 将 .auth-layout 改为 .auth-container */
 .auth-container {
   display: flex;
   justify-content: center;
   align-items: center;
   flex-grow: 1;
-  /* 让这个容器填满 App.vue 布局中的剩余空间 */
   padding: 40px 0;
-  /* 添加一些垂直内边距 */
-  /* background-color: #f0f2f5; <-- 移除这一行，让背景色透明，显示出全局背景色 */
 }
 
 .auth-card {

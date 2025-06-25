@@ -87,7 +87,7 @@
     <template #footer>
       <n-flex justify="end">
         <n-button @click="showPasswordModal = false">取消</n-button>
-        <n-button type="primary" @click="handleChangePassword">确认修改</n-button>
+        <n-button type="primary" @click="handleChangePassword" :loading="isChangingPassword">确认修改</n-button>
       </n-flex>
     </template>
   </n-modal>
@@ -146,7 +146,7 @@ const maskedPhone = computed(() => {
   return phone;
 });
 
-// --- 绑定/更换 Modal 的逻辑 ---
+// --- 绑定/更换 Modal 的逻辑 (保持不变) ---
 const showBindingModal = ref(false);
 const bindingType = ref("");
 const bindingFormRef = ref(null);
@@ -213,18 +213,14 @@ async function executeSendCode() {
   }, 500);
 }
 
-// **核心修改 1**: 使用 try...catch 结构重构 submitBinding 函数
 async function submitBinding() {
   try {
     await bindingFormRef.value?.validate();
-    // 验证通过后，执行模拟成功的逻辑
     message.success(`${bindingTitle.value}成功！`);
     profileForm.value[bindingType.value] = bindingForm.value.value;
-    authStore.user[bindingType.value] = bindingForm.value.value;
-    localStorage.setItem("user", JSON.stringify(authStore.user));
+    // 注意：真实场景下，绑定手机/邮箱后，可能需要重新验证用户身份或更新token
     showBindingModal.value = false;
   } catch (validationErrors) {
-    // 验证失败后，捕获错误并给出提示
     message.error("请按要求填写所有字段。");
     console.log("Form validation failed:", validationErrors);
   }
@@ -234,6 +230,8 @@ async function submitBinding() {
 const showPasswordModal = ref(false);
 const passwordFormRef = ref(null);
 const passwordForm = ref({ oldPassword: '', newPassword: '', confirmPassword: '' });
+const isChangingPassword = ref(false); // **核心修正**: 新增加载状态
+
 const validatePasswordSame = (rule, value) => {
   if (value !== passwordForm.value.newPassword) {
     return new Error('两次输入的密码不一致');
@@ -249,20 +247,37 @@ const passwordRules = {
   ]
 };
 
-// **核心修改 2**: 使用 try...catch 结构重构 handleChangePassword 函数
+// **核心修正**: 重写 handleChangePassword 以实现真实 API 调用
 const handleChangePassword = async () => {
   try {
     await passwordFormRef.value?.validate();
-    // 验证通过后，执行模拟成功的逻辑
-    message.success("密码修改成功（模拟）");
+    isChangingPassword.value = true;
+
+    const payload = {
+      oldPassword: passwordForm.value.oldPassword,
+      newPassword: passwordForm.value.newPassword
+    };
+
+    await apiService.changePassword(payload);
+
+    message.success("密码修改成功！");
     showPasswordModal.value = false;
-  } catch (validationErrors) {
-    // 验证失败后，捕获错误并给出提示
-    message.error("请按要求填写所有字段。");
-    console.log("Form validation failed:", validationErrors);
+    passwordForm.value = { oldPassword: '', newPassword: '', confirmPassword: '' };
+
+  } catch (error) {
+    if (error && Array.isArray(error)) {
+      message.error("请按要求填写所有字段。");
+    } else if (error.response) {
+      // 后端返回的业务错误信息
+      message.error(error.response.data.message || "密码修改失败，请重试");
+    } else {
+      message.error("发生未知错误");
+    }
+    console.error("密码修改失败:", error);
+  } finally {
+    isChangingPassword.value = false;
   }
 };
-
 
 // --- 其他逻辑保持不变 ---
 onMounted(() => {
@@ -284,7 +299,7 @@ const customAvatarUploadRequest = async ({ file, onFinish, onError }) => {
     message.success("头像预览更新成功，请点击下方“保存修改”以生效。");
     onFinish();
   } catch (error) {
-    message.error(error.message);
+    message.error("头像上传失败: " + (error.response?.data?.error?.message || error.message));
     onError();
   } finally {
     uploadingToHost.value = false;

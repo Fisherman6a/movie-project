@@ -94,6 +94,7 @@ public class MovieService {
             String title,
             Integer releaseYear,
             String genre, String country, Double minRating,
+            Integer yearStart, Integer yearEnd, // 新增参数
             String sortBy,
             String sortDir, int page, int size) {
         Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
@@ -103,9 +104,19 @@ public class MovieService {
         if (title != null && !title.isEmpty()) {
             spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("title")), "%" + title.toLowerCase() + "%"));
         }
+
+        // **核心修正2**: 添加处理年份范围的逻辑
         if (releaseYear != null) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("releaseYear"), releaseYear));
+        } else {
+            if (yearStart != null) {
+                spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("releaseYear"), yearStart));
+            }
+            if (yearEnd != null) {
+                spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("releaseYear"), yearEnd));
+            }
         }
+
         if (genre != null && !genre.isEmpty()) {
             spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("genre")), "%" + genre.toLowerCase() + "%"));
         }
