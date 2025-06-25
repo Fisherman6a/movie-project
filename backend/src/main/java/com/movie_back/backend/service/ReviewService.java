@@ -141,7 +141,6 @@ public class ReviewService {
         dto.setMovieTitle(vReview.getMovieTitle());
         dto.setUserId(vReview.getUserId());
         dto.setUsername(vReview.getUsername());
-        dto.setUserProfileImageUrl(vReview.getUserProfileImageUrl());
         return dto;
     }
 

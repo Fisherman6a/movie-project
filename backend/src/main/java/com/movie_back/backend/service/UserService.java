@@ -143,4 +143,27 @@ public class UserService implements UserDetailsService {
         }
         userRepository.deleteById(id);
     }
+
+    @Transactional
+    public void changeUserEmail(User currentUser, String newEmail) {
+        // 检查新邮箱是否已被其他用户占用
+        userRepository.findByEmail(newEmail).ifPresent(user -> {
+            if (!user.getId().equals(currentUser.getId())) {
+                throw new IllegalStateException("该邮箱已被其他用户绑定");
+            }
+        });
+        currentUser.setEmail(newEmail);
+        userRepository.save(currentUser);
+    }
+
+    @Transactional
+    public void changeUserPhone(User currentUser, String newPhone) {
+        userRepository.findByPhone(newPhone).ifPresent(user -> {
+        if (!user.getId().equals(currentUser.getId())) {
+        throw new IllegalStateException("该电话号码已被其他用户绑定");
+        }
+        });
+        currentUser.setPhone(newPhone);
+        userRepository.save(currentUser);
+    }
 }

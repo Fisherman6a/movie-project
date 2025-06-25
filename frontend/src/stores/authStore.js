@@ -18,7 +18,12 @@ export const useAuthStore = defineStore('auth', () => {
             userId: authData.userId,
             username: authData.username,
             role: authData.role,
-            profileImageUrl: authData.profileImageUrl
+            profileImageUrl: authData.profileImageUrl,
+            bio: authData.bio,
+            personalWebsite: authData.personalWebsite,
+            birthDate: authData.birthDate,
+            email: authData.email,
+            createdAt: authData.createdAt // <-- 新增此字段
         };
         // 将认证信息存入 localStorage
         localStorage.setItem('token', authData.token);

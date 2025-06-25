@@ -1,11 +1,10 @@
 package com.movie_back.backend.dto.auth;
 
 import java.time.LocalDate;
-
+import java.time.LocalDateTime; // 新增导入
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-// 登录成功后返回的数据传输对象
 @Data
 @AllArgsConstructor
 public class AuthResponse {
@@ -14,8 +13,9 @@ public class AuthResponse {
     private String username;
     private String role;
     private String profileImageUrl;
-    private String email; // 新增
-    private String personalWebsite; // 新增
-    private LocalDate birthDate; // 新增
-    private String bio; // 新增
+    private String email;
+    private String personalWebsite;
+    private LocalDate birthDate;
+    private String bio;
+    private LocalDateTime createdAt; // <-- 新增此字段
 }

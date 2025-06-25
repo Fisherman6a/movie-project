@@ -49,7 +49,8 @@ public class AuthController {
                 user.getEmail(),
                 user.getPersonalWebsite(),
                 user.getBirthDate(),
-                user.getBio());
+                user.getBio(),
+                user.getCreatedAt());
         return ResponseEntity.ok(response);
     }
 

@@ -1,6 +1,8 @@
 package com.movie_back.backend.controller;
 
+import com.movie_back.backend.dto.user.EmailUpdateRequest;
 import com.movie_back.backend.dto.user.PasswordChangeRequest;
+import com.movie_back.backend.dto.user.PhoneUpdateRequest;
 import com.movie_back.backend.dto.user.UserDTO;
 import com.movie_back.backend.dto.user.UserProfileUpdateDTO;
 import com.movie_back.backend.entity.User;
@@ -80,5 +82,23 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/me/email")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> changeEmail(
+            @AuthenticationPrincipal User currentUser,
+            @Valid @RequestBody EmailUpdateRequest request) {
+        userService.changeUserEmail(currentUser, request.getEmail());
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/me/phone")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> changePhone(
+            @AuthenticationPrincipal User currentUser,
+            @Valid @RequestBody PhoneUpdateRequest request) {
+        userService.changeUserPhone(currentUser, request.getPhone());
+        return ResponseEntity.ok().build();
     }
 }

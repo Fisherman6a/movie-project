@@ -1,4 +1,3 @@
--- 使用您的数据库
 USE movie_db;
 
 -- 为了方便重复执行，先清空所有表中的数据
@@ -32,7 +31,8 @@ INSERT INTO
         `role`,
         `bio`,
         `birth_date`,
-        `created_at`
+        `created_at`,
+        `phone`
     )
 VALUES (
         111,
@@ -42,7 +42,8 @@ VALUES (
         'ROLE_USER',
         '科幻电影爱好者，喜欢诺兰和卡梅隆。',
         '1990-05-15',
-        NOW()
+        NOW(),
+        '13800138001'
     ),
     (
         211,
@@ -52,7 +53,8 @@ VALUES (
         'ROLE_USER',
         '中国科幻的忠实拥趸。',
         '1995-08-20',
-        NOW()
+        NOW(),
+        NULL
     ),
     (
         311,
@@ -62,9 +64,9 @@ VALUES (
         'ROLE_ADMIN',
         '英式喜剧发烧友。',
         '1988-01-30',
-        NOW()
+        NOW(),
+        '13800138003'
     );
-
 -- =================================================================
 -- 2. 插入导演 (directors)
 -- =================================================================
@@ -144,7 +146,7 @@ VALUES (
         '2002-09-29',
         'FEMALE',
         '中国',
-        'https://i.ibb.co/8LJn6C9V/image.jpg'
+        'https://i.ibb.co/6RC95nZQ/image.jpg'
     ),
     (
         4,
@@ -355,7 +357,6 @@ INSERT INTO
         `comment_text`,
         `likes`,
         `created_at`,
-        `updated_at`
     )
 VALUES
     -- 张三的评价
@@ -365,7 +366,6 @@ VALUES
         10,
         '极致的视觉盛宴',
         0,
-        NOW(),
         NOW()
     ), -- 原评分
     (
@@ -374,7 +374,6 @@ VALUES
         10,
         '诺兰yyds！时空和引力的概念太震撼了！',
         152,
-        NOW(),
         NOW()
     ), -- 原评分+评论
     (
@@ -383,37 +382,19 @@ VALUES
         8,
         '背景音乐太神了',
         0,
-        NOW(),
         NOW()
     ), -- 原评分
     -- 李四的评价
-    (
-        211,
-        1,
-        9,
-        '不错',
-        0,
-        NOW(),
-        NOW()
-    ), -- 原评分
+    (211, 1, 9, '不错', 0, NOW()), -- 原评分
     (
         211,
         2,
         10,
         '特效和格局都超越了第一部，看到了中国科幻的希望！刘德华的角色很有深度。',
         288,
-        NOW(),
         NOW()
     ), -- 原评分+评论
-    (
-        211,
-        4,
-        9,
-        '还可以',
-        0,
-        NOW(),
-        NOW()
-    ), -- 原评分
+    (211, 4, 9, '还可以', 0, NOW()), -- 原评分
     -- 王五的评价
     (
         311,
@@ -421,22 +402,13 @@ VALUES
         10,
         '永不过时的经典政治喜剧，汉弗莱爵士的语言艺术出神入化！',
         99,
-        NOW(),
         NOW()
     ), -- 原评分+评论
-    (
-        311,
-        1,
-        8,
-        '好',
-        0,
-        NOW(),
-        NOW()
-    );
+    (311, 1, 8, '好', 0, NOW());
 -- 原评分
 
 -- =================================================================
--- 8. 更新所有电影的平均分 (在后端逻辑中会自动完成，此处为手动更新以保证数据完整性)
+-- 8. 手动更新所有电影的平均分
 -- =================================================================
 UPDATE movies m
 SET
@@ -446,102 +418,3 @@ SET
         WHERE
             r.movie_id = m.id
     );
-
-UPDATE actors SET gender = 'MALE' WHERE gender = 'Male';
-
-UPDATE actors SET gender = 'FEMALE' WHERE gender = 'Female';
-
-UPDATE actors SET gender = 'OTHER' WHERE gender = 'Other';
-
--- 标准化 directors 表中的性别数据
-UPDATE directors SET gender = 'MALE' WHERE gender = 'Male';
-
-UPDATE directors SET gender = 'FEMALE' WHERE gender = 'Female';
-
-UPDATE directors SET gender = 'OTHER' WHERE gender = 'Other';
-
-CREATE TABLE `actors` (
-    `id` bigint NOT NULL AUTO_INCREMENT,
-    `biography` text COLLATE utf8mb4_unicode_ci,
-    `birth_date` date DEFAULT NULL,
-    `gender` enum('FEMALE', 'MALE', 'OTHER') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-    `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-    `nationality` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-    `profile_image_url` varchar(2048) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-    PRIMARY KEY (`id`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci
-
-CREATE TABLE `directors` (
-    `id` bigint NOT NULL AUTO_INCREMENT,
-    `biography` text COLLATE utf8mb4_unicode_ci,
-    `birth_date` date DEFAULT NULL,
-    `gender` enum('FEMALE', 'MALE', 'OTHER') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-    `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-    `nationality` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-    `profile_image_url` varchar(2048) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-    PRIMARY KEY (`id`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci
-
-CREATE TABLE `movie_actors` (
-    `movie_id` bigint NOT NULL,
-    `actor_id` bigint NOT NULL,
-    PRIMARY KEY (`movie_id`, `actor_id`),
-    KEY `FK7svt4y6p0f9gpjy10awtubp02` (`actor_id`),
-    CONSTRAINT `FK7svt4y6p0f9gpjy10awtubp02` FOREIGN KEY (`actor_id`) REFERENCES `actors` (`id`),
-    CONSTRAINT `FKs4rlt03tdf55rwso4uyrwm0oq` FOREIGN KEY (`movie_id`) REFERENCES `movies` (`id`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci
-
-CREATE TABLE `movie_directors` (
-    `movie_id` bigint NOT NULL,
-    `director_id` bigint NOT NULL,
-    PRIMARY KEY (`movie_id`, `director_id`),
-    KEY `FKabpc9kvk8dao6yb3xro5i916r` (`director_id`),
-    CONSTRAINT `FK90u08nnfro53e8vy5bgkkf77o` FOREIGN KEY (`movie_id`) REFERENCES `movies` (`id`),
-    CONSTRAINT `FKabpc9kvk8dao6yb3xro5i916r` FOREIGN KEY (`director_id`) REFERENCES `directors` (`id`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci
-
-CREATE TABLE `movies` (
-    `id` bigint NOT NULL AUTO_INCREMENT,
-    `average_rating` double DEFAULT NULL,
-    `country` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-    `duration` int DEFAULT NULL,
-    `genre` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-    `language` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-    `poster_url` varchar(2048) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-    `release_year` int DEFAULT NULL,
-    `synopsis` longtext COLLATE utf8mb4_unicode_ci,
-    `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-    PRIMARY KEY (`id`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci
-
-CREATE TABLE `reviews` (
-    `id` bigint NOT NULL AUTO_INCREMENT,
-    `comment_text` text COLLATE utf8mb4_unicode_ci NOT NULL,
-    `created_at` datetime(6) DEFAULT NULL,
-    `likes` int NOT NULL,
-    `score` int NOT NULL,
-    `updated_at` datetime(6) DEFAULT NULL,
-    `movie_id` bigint NOT NULL,
-    `user_id` bigint NOT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `UKovijrmb7g6cvqvlgr25vb8r98` (`user_id`, `movie_id`),
-    KEY `FK87tlqya0rq8ijfjscldpvvdyq` (`movie_id`),
-    CONSTRAINT `FK87tlqya0rq8ijfjscldpvvdyq` FOREIGN KEY (`movie_id`) REFERENCES `movies` (`id`),
-    CONSTRAINT `FKcgy7qjc1r99dp117y9en6lxye` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci
-
-CREATE TABLE `users` (
-    `id` bigint NOT NULL AUTO_INCREMENT,
-    `bio` longtext COLLATE utf8mb4_unicode_ci,
-    `birth_date` date DEFAULT NULL,
-    `created_at` datetime(6) DEFAULT NULL,
-    `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-    `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-    `personal_website` varchar(2048) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-    `profile_image_url` varchar(2048) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-    `role` enum('ROLE_ADMIN', 'ROLE_USER') COLLATE utf8mb4_unicode_ci NOT NULL,
-    `username` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `UK6dotkott2kjsp8vw4d0m25fb7` (`email`),
-    UNIQUE KEY `UKr43af9ap4edm43mmtq01oddj6` (`username`)
-) ENGINE = InnoDB AUTO_INCREMENT = 3 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci

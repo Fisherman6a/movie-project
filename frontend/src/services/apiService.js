@@ -139,5 +139,10 @@ export default {
     changePassword(passwordData) {
         return apiClient.put('/users/me/password', passwordData);
     },
-
+    changeEmail(newEmail) {
+        return apiClient.put('/users/me/email', { email: newEmail });
+    },
+    changePhone(newPhone) {
+        return apiClient.put('/users/me/phone', { phone: newPhone });
+    },
 };

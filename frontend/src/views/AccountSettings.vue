@@ -62,13 +62,18 @@
           </n-form>
         </n-card>
 
-        <n-flex justify="end" style="margin-top: 24px">
+        <!-- ================== 修改开始 ================== -->
+        <!-- 使用 v-if 指令，仅在 activeKey 为 'basic' 时显示此按钮 -->
+        <n-flex v-if="activeKey === 'basic'" justify="end" style="margin-top: 24px">
           <n-button type="primary" @click="handleSave" :loading="saving">保存修改</n-button>
         </n-flex>
+        <!-- ================== 修改结束 ================== -->
+
       </n-gi>
     </n-grid>
   </n-layout-content>
 
+  <!-- ... 模态框部分保持不变 ... -->
   <n-modal v-model:show="showPasswordModal" preset="card" title="修改密码" style="width: 450px">
     <n-form ref="passwordFormRef" :model="passwordForm" :rules="passwordRules" label-placement="left" label-width="80">
       <n-form-item label="旧密码" path="oldPassword">
@@ -146,7 +151,6 @@ const maskedPhone = computed(() => {
   return phone;
 });
 
-// --- 绑定/更换 Modal 的逻辑 (保持不变) ---
 const showBindingModal = ref(false);
 const bindingType = ref("");
 const bindingFormRef = ref(null);
@@ -216,21 +220,36 @@ async function executeSendCode() {
 async function submitBinding() {
   try {
     await bindingFormRef.value?.validate();
+
+    const apiCall = bindingType.value === 'email'
+      ? apiService.changeEmail(bindingForm.value.value)
+      : apiService.changePhone(bindingForm.value.value);
+
+    await apiCall;
+
     message.success(`${bindingTitle.value}成功！`);
+
     profileForm.value[bindingType.value] = bindingForm.value.value;
-    // 注意：真实场景下，绑定手机/邮箱后，可能需要重新验证用户身份或更新token
+
+    authStore.user[bindingType.value] = bindingForm.value.value;
+    localStorage.setItem("user", JSON.stringify(authStore.user));
+
     showBindingModal.value = false;
-  } catch (validationErrors) {
-    message.error("请按要求填写所有字段。");
-    console.log("Form validation failed:", validationErrors);
+
+  } catch (error) {
+    if (error && Array.isArray(error)) {
+      message.error("请按要求填写所有字段。");
+    } else {
+      message.error("操作失败: " + (error.response?.data?.message || "请稍后重试"));
+    }
+    console.error("绑定失败:", error);
   }
 }
 
-// --- 修改密码相关的完整逻辑 ---
 const showPasswordModal = ref(false);
 const passwordFormRef = ref(null);
 const passwordForm = ref({ oldPassword: '', newPassword: '', confirmPassword: '' });
-const isChangingPassword = ref(false); // **核心修正**: 新增加载状态
+const isChangingPassword = ref(false);
 
 const validatePasswordSame = (rule, value) => {
   if (value !== passwordForm.value.newPassword) {
@@ -247,7 +266,6 @@ const passwordRules = {
   ]
 };
 
-// **核心修正**: 重写 handleChangePassword 以实现真实 API 调用
 const handleChangePassword = async () => {
   try {
     await passwordFormRef.value?.validate();
@@ -268,7 +286,6 @@ const handleChangePassword = async () => {
     if (error && Array.isArray(error)) {
       message.error("请按要求填写所有字段。");
     } else if (error.response) {
-      // 后端返回的业务错误信息
       message.error(error.response.data.message || "密码修改失败，请重试");
     } else {
       message.error("发生未知错误");
@@ -279,7 +296,6 @@ const handleChangePassword = async () => {
   }
 };
 
-// --- 其他逻辑保持不变 ---
 onMounted(() => {
   if (authStore.user) {
     profileForm.value = { ...authStore.user };

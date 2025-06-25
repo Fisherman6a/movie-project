@@ -9,16 +9,14 @@ import com.movie_back.backend.entity.Movie;
 import java.util.List;
 
 public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecificationExecutor<Movie> {
-    // 可以按照电影的发行年月、类型/流派、评分等信息进行组合查询和排序 (使用Specification API)
-
-    // 示例：按类型查找
+    // 按类型查找
     List<Movie> findByGenreContainingIgnoreCase(String genre);
 
-    // 示例：查找某演员参演的电影
+    // 查找某演员参演的电影
     @Query("SELECT m FROM Movie m JOIN m.cast a WHERE a.id = :actorId")
     List<Movie> findMoviesByActorId(@Param("actorId") Long actorId);
 
-    // 示例：查找某导演执导的电影
+    // 查找某导演执导的电影
     @Query("SELECT m FROM Movie m JOIN m.directors d WHERE d.id = :directorId")
     List<Movie> findMoviesByDirectorId(@Param("directorId") Long directorId);
 
@@ -26,11 +24,11 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     @Query("SELECT m FROM Movie m ORDER BY m.averageRating DESC")
     List<Movie> findTopRatedMovies(org.springframework.data.domain.Pageable pageable);
 
-    // 示例：根据演员姓名模糊查找电影
+    // 根据演员姓名模糊查找电影
     @Query("SELECT m FROM Movie m JOIN m.cast a WHERE a.name LIKE %:actorName%")
     List<Movie> findMoviesByActorNameContaining(@Param("actorName") String actorName);
 
-    // 示例：根据导演姓名模糊查找电影
+    // 根据导演姓名模糊查找电影
     @Query("SELECT m FROM Movie m JOIN m.directors d WHERE d.name LIKE %:directorName%")
     List<Movie> findMoviesByDirectorNameContaining(@Param("directorName") String directorName);
 }

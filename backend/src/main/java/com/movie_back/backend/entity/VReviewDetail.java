@@ -37,9 +37,6 @@ public class VReviewDetail {
     @Column(name = "username")
     private String username;
 
-    @Column(name = "profile_image_url")
-    private String userProfileImageUrl;
-
     @Column(name = "movie_id")
     private Long movieId;
 

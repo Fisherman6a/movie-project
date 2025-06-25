@@ -56,3 +56,18 @@ o国籍 (Nationality)
 -- 有容错处理，比如日期输入，不能输入2021-5-35，对输入的不合理数据系统要有相应的处理，而不是程序中断运行；
 -- 有多种输入形式，如输入、下拉、单选、复选等；
 -- 汇总统计，必须同时包含明细信息和汇总信息，以报表形式给出。
+
+
+users (id, username, password, email, profile_image_url, role, created_at, personal_website, birth_date, bio)
+movies (id, title, release_year, duration, genre, language, country, synopsis, average_rating, poster_url)
+actors (id, name, gender, birth_date, nationality, profile_image_url, biography)
+directors (id, name, gender, birth_date, nationality, profile_image_url, biography)
+reviews (id, score, likes, comment_text, created_at, movie_id, user_id)
+外键: movie_id 引用 movies(id)
+外键: user_id 引用 users(id)
+movie_actors (movie_id, actor_id)
+外键: movie_id 引用 movies(id)
+外键: actor_id 引用 actors(id)
+movie_directors (movie_id, director_id)
+外键: movie_id 引用 movies(id)
+外键: director_id 引用 directors(id)

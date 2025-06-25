@@ -53,6 +53,9 @@ public class User implements UserDetails {
     @Lob
     private String bio;
 
+    @Column(length = 20) // 假设电话号码最长为20位
+    private String phone; // <-- 新增此字段
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

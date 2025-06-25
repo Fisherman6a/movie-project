@@ -25,6 +25,10 @@
               </template>
               访问个人网站
             </n-button>
+            <n-p depth="3" v-if="user.createdAt" style="margin: 0;">
+              <n-icon :component="TimeIcon" :size="14" style="vertical-align: -0.15em; margin-right: 4px;" />
+              于 {{ formattedJoinDate }} 加入
+            </n-p>
           </n-space>
         </n-space>
       </n-space>
@@ -60,11 +64,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue';
+import { ref, onMounted, nextTick, computed } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import apiService from '@/services/apiService';
 import { NLayoutContent, NCard, NSpace, NAvatar, NH1, NH2, NP, NText, NButton, NIcon, NList, NListItem, NThing, NSpin, NEmpty, NInput, NInputGroup, useMessage } from 'naive-ui';
-import { Link as LinkIcon } from '@vicons/ionicons5';
+import { Link as LinkIcon, TimeOutline as TimeIcon } from '@vicons/ionicons5';
 
 const authStore = useAuthStore();
 const message = useMessage();
@@ -120,6 +124,15 @@ const saveBio = async () => {
   }
 };
 // --- 新增逻辑结束 ---
+
+const formattedJoinDate = computed(() => {
+  if (!user.value.createdAt) {
+    return '';
+  }
+  const date = new Date(user.value.createdAt);
+  // 将日期格式化为 "YYYY年MM月DD日"
+  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+});
 
 onMounted(async () => {
   if (authStore.user) {
