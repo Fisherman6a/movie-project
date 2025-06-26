@@ -72,7 +72,6 @@ const message = useMessage();
 const formRef = ref(null);
 const uploading = ref(false);
 
-// **核心修改 2**: 使用 computed 代替原来的 ref 和 watch
 const model = computed({
     get: () => props.modelValue,
     set: (value) => {
@@ -91,9 +90,6 @@ const rules = {
     posterUrl: { required: true, message: '请上传海报', trigger: 'blur' },
 };
 
-// **核心修改 3**: 移除两个导致无限循环的 watch
-// watch(() => props.modelValue, ...);
-// watch(model, ...);
 
 const handleUpload = async ({ file, onFinish, onError }) => {
     uploading.value = true;

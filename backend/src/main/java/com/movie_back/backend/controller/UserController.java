@@ -48,7 +48,7 @@ public class UserController {
         return ResponseEntity.ok(userDTO);
     }
 
-    // 新增：更新当前登录用户的个人资料
+    // 更新当前登录用户的个人资料
     @PutMapping("/me")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserDTO> updateCurrentUserProfile(
@@ -58,7 +58,6 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
-    // **核心修正3**: 新增修改密码的端点
     @PutMapping("/me/password")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> changePassword(

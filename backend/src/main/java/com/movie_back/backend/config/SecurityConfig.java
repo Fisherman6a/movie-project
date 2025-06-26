@@ -25,7 +25,7 @@ import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true) // 确保 @PreAuthorize 注解生效
+@EnableMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -66,7 +66,7 @@ public class SecurityConfig {
                                 "/api/auth/**",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
-                                "/swagger-ui.html", // 明确允许html文件
+                                "/swagger-ui.html",
                                 HttpMethod.GET.name(), "/api/movies/**",
                                 HttpMethod.GET.name(), "/api/actors/**",
                                 HttpMethod.GET.name(), "/api/directors/**",

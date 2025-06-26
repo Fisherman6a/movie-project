@@ -24,7 +24,6 @@ public class ActorService {
     @Transactional
     public ActorDTO createActor(ActorDTO actorDTO) {
         Actor actor = new Actor();
-        // **核心修改**: 直接使用枚举类型进行赋值
         actor.setName(actorDTO.getName());
         actor.setGender(actorDTO.getGender());
         actor.setBirthDate(actorDTO.getBirthDate());
@@ -59,7 +58,6 @@ public class ActorService {
         Actor actor = actorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Actor not found with id: " + id));
 
-        // **核心修改**: 直接使用枚举类型进行赋值
         actor.setName(actorDetails.getName());
         actor.setGender(actorDetails.getGender());
         actor.setBirthDate(actorDetails.getBirthDate());
@@ -81,7 +79,6 @@ public class ActorService {
 
     private ActorDTO convertToDTO(Actor actor) {
         ActorDTO dto = new ActorDTO();
-        // **核心修改**: 直接使用枚举类型进行赋值
         dto.setId(actor.getId());
         dto.setName(actor.getName());
         dto.setGender(actor.getGender());

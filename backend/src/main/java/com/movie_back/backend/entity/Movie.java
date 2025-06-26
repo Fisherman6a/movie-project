@@ -11,7 +11,6 @@ import java.util.Set;
 @Entity
 @Table(name = "movies")
 @Data
-// **核心修改**: 从 exclude 中移除 "userRatings"
 @EqualsAndHashCode(exclude = { "cast", "directors", "reviews" })
 @ToString(exclude = { "cast", "directors", "reviews" })
 public class Movie {
@@ -55,7 +54,7 @@ public class Movie {
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<Review> reviews = new HashSet<>();
 
-    // **核心修改**: 移除对 UserRating 的引用
+    // 移除对 UserRating 的引用
     // @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval =
     // true, fetch = FetchType.LAZY)
     // private Set<UserRating> userRatings = new HashSet<>();

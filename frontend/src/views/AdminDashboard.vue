@@ -322,7 +322,7 @@ const handleDeleteCinema = async (type, id) => {
     }
 };
 
-// ==================== 影评管理逻辑 ====================
+// 影评管理逻辑
 const loadingReviews = ref(false);
 const allReviews = ref([]);
 const filteredReviews = ref([]);
@@ -384,7 +384,7 @@ const deleteReview = async (reviewId) => {
     }
 };
 
-// ==================== 用户管理逻辑 ====================
+// ==================== 用户管理逻辑
 const userSearchKeyword = ref('');
 const loadingUsers = ref(false);
 const allUsers = ref([]);
@@ -441,7 +441,7 @@ const handleDeleteUser = async (id) => {
     }
 };
 
-// ==================== Tab 切换逻辑 ====================
+// Tab 切换逻辑
 const handleTabChange = (value) => {
     if (value === 'cinema' && cinemaData.value.movies.length === 0) {
         fetchCinemaData();

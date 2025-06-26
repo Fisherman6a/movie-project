@@ -1,6 +1,6 @@
 package com.movie_back.backend.dto.actor;
 
-import com.movie_back.backend.entity.Gender; // 引入 Gender
+import com.movie_back.backend.entity.Gender;
 import lombok.Data;
 import java.time.LocalDate;
 

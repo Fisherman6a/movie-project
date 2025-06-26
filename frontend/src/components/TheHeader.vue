@@ -34,9 +34,7 @@
 </template>
 
 <script setup>
-// ========== START: Import 'computed' ==========
 import { ref, computed } from 'vue';
-// ========== END: Import 'computed' ==========
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { useSearchStore } from '@/stores/searchStore';
@@ -48,7 +46,6 @@ const authStore = useAuthStore();
 const searchTerm = ref('');
 const searchStore = useSearchStore();
 
-// ========== START: Convert dropdownOptions to a computed property ==========
 const dropdownOptions = computed(() => {
   const options = [
     {
@@ -84,7 +81,6 @@ const dropdownOptions = computed(() => {
 
   return options;
 });
-// ========== END: Convert dropdownOptions to a computed property ==========
 
 
 const handleSearch = () => {

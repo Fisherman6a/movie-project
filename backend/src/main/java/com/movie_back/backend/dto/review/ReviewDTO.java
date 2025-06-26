@@ -4,7 +4,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class ReviewDTO { // 用于展示
+public class ReviewDTO {
     private Long id;
     private Long movieId;
     private String movieTitle;
@@ -14,6 +14,6 @@ public class ReviewDTO { // 用于展示
     private String commentText;
     private LocalDateTime createdAt;
     // private LocalDateTime updatedAt;
-    private Integer score; // 确保有 score 字段
+    private Integer score;
     private Integer likes;
 }

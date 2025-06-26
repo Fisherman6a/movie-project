@@ -41,7 +41,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'; // 引入 computed
+import { ref, onMounted, watch, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import {
     NSpin, NH1, NH2, NP, NEmpty, useMessage, NSpace, NGrid, NGridItem, NCard, NRate
@@ -58,7 +58,7 @@ const movies = ref([]);
 const loading = ref(true);
 const message = useMessage();
 
-// **核心修改**: 新增计算属性，用于转换性别显示文本
+// 新增计算属性，用于转换性别显示文本
 const genderText = computed(() => {
     if (!person.value?.gender) {
         return '未知';

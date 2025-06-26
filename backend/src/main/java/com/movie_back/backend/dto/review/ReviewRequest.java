@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class ReviewRequest { // 用于创建和更新
+public class ReviewRequest {
     @NotBlank
     private String commentText;
 

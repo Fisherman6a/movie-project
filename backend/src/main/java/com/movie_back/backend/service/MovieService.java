@@ -35,7 +35,6 @@ public class MovieService {
     private final DirectorRepository directorRepository;
     private final ReviewRepository reviewRepository;
 
-    // **核心修正2**: 注入在 application.properties 中定义的默认图片 URL
     @Value("${default.person.image.url}")
     private String defaultPersonImageUrl;
 
@@ -73,7 +72,6 @@ public class MovieService {
         movieRepository.deleteById(movieId);
     }
 
-    // **核心修正**: 添加缺失的 updateMovieAverageRating 方法
     @Transactional
     public void updateMovieAverageRating(Long movieId) {
         Movie movie = movieRepository.findById(movieId)
@@ -94,7 +92,7 @@ public class MovieService {
             String title,
             Integer releaseYear,
             String genre, String country, Double minRating,
-            Integer yearStart, Integer yearEnd, // 新增参数
+            Integer yearStart, Integer yearEnd,
             String sortBy,
             String sortDir, int page, int size) {
         Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
@@ -105,7 +103,6 @@ public class MovieService {
             spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("title")), "%" + title.toLowerCase() + "%"));
         }
 
-        // **核心修正2**: 添加处理年份范围的逻辑
         if (releaseYear != null) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("releaseYear"), releaseYear));
         } else {

@@ -77,7 +77,7 @@ public class ReviewController {
         return ResponseEntity.ok(updatedReview);
     }
 
-    // **核心修正**: 新增API端点以调用存储过程
+    // API端点以调用存储过程
     @GetMapping("/movies/title/{movieTitle}/reviews_procedure")
     public ResponseEntity<List<ReviewDTO>> getReviewsByMovieTitleProcedure(@PathVariable String movieTitle) {
         List<ReviewDTO> reviews = reviewService.getReviewsByMovieTitleFromProcedure(movieTitle);

@@ -22,7 +22,7 @@ public class Actor {
     @Column(length = 100, nullable = false)
     private String name;
 
-    // **核心修改**: 类型从 String 改为 Gender 枚举
+    // 类型从 String 改为 Gender 枚举
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     private Gender gender;

@@ -76,7 +76,6 @@ const user = ref({});
 const myReviews = ref([]);
 const loadingReviews = ref(true);
 
-// --- 新增：用于原地编辑签名的状态 ---
 const isEditingBio = ref(false);
 const isSavingBio = ref(false);
 const editingBioText = ref('');
@@ -123,7 +122,6 @@ const saveBio = async () => {
     isSavingBio.value = false;
   }
 };
-// --- 新增逻辑结束 ---
 
 const formattedJoinDate = computed(() => {
   if (!user.value.createdAt) {

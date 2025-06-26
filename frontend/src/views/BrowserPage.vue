@@ -200,7 +200,7 @@ watch(() => route.query, (query) => {
   filterParams.value.yearStart = query.yearStart || null;
   filterParams.value.yearEnd = query.yearEnd || null;
 
-  // **核心修正**: 根据URL参数反向设置高亮状态
+  // 根据URL参数反向设置高亮状态
   if (!filterParams.value.releaseYear) {
     if (filterParams.value.yearStart == '2010' && filterParams.value.yearEnd == '2019') {
       filterParams.value.releaseYear = '2010s';

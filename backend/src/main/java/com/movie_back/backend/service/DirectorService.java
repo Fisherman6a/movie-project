@@ -24,7 +24,6 @@ public class DirectorService {
     @Transactional
     public DirectorDTO createDirector(DirectorDTO directorDTO) {
         Director director = new Director();
-        // **核心修改**: 直接使用枚举类型进行赋值
         director.setName(directorDTO.getName());
         director.setGender(directorDTO.getGender());
         director.setBirthDate(directorDTO.getBirthDate());
@@ -58,7 +57,6 @@ public class DirectorService {
     public DirectorDTO updateDirector(Long id, DirectorDTO directorDetails) {
         Director director = directorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Director not found with id: " + id));
-        // **核心修改**: 直接使用枚举类型进行赋值
         director.setName(directorDetails.getName());
         director.setGender(directorDetails.getGender());
         director.setBirthDate(directorDetails.getBirthDate());
@@ -79,7 +77,6 @@ public class DirectorService {
 
     private DirectorDTO convertToDTO(Director director) {
         DirectorDTO dto = new DirectorDTO();
-        // **核心修改**: 直接使用枚举类型进行赋值
         dto.setId(director.getId());
         dto.setName(director.getName());
         dto.setGender(director.getGender());

@@ -98,7 +98,6 @@ const fetchHomePageMovies = async () => {
   try {
     const [hotResponse, latestResponse] = await Promise.all([
       apiService.getHotMovies(12),
-      // **核心修正**: 将数字 12 改为参数对象
       apiService.getLatestMovies({ sortBy: 'releaseYear', sortDir: 'desc', size: 12 })
     ]);
     popularMovies.value = hotResponse.data;

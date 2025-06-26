@@ -23,7 +23,7 @@ export const useAuthStore = defineStore('auth', () => {
             personalWebsite: authData.personalWebsite,
             birthDate: authData.birthDate,
             email: authData.email,
-            createdAt: authData.createdAt // <-- 新增此字段
+            createdAt: authData.createdAt 
         };
         // 将认证信息存入 localStorage
         localStorage.setItem('token', authData.token);

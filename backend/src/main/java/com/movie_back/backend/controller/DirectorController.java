@@ -29,7 +29,6 @@ public class DirectorController {
         return ResponseEntity.ok(directorService.getAllDirectors());
     }
 
-    // 新增：按姓名搜索导演 - 公开
     @GetMapping("/search")
     public ResponseEntity<List<DirectorDTO>> searchDirectors(@RequestParam String name) {
         return ResponseEntity.ok(directorService.searchDirectorsByName(name));

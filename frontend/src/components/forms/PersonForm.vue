@@ -53,7 +53,6 @@ const model = computed({
     }
 });
 
-// **核心修改**: 定义下拉框选项
 const genderOptions = [
     { label: '男', value: 'MALE' },
     { label: '女', value: 'FEMALE' },

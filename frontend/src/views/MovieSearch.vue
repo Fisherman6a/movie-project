@@ -50,7 +50,6 @@ import { ref, watch, onMounted } from 'vue';
 import { useMessage, NSpin, NH2, NH3, NText, NGrid, NGridItem, NCard, NEmpty, NFlex } from 'naive-ui';
 import apiService from '@/services/apiService';
 
-// ... script 部分无需修改，保持原样即可 ...
 const props = defineProps({
   keyword: String,
 });
@@ -119,7 +118,7 @@ a {
   margin-bottom: 40px;
 }
 
-/* 新增：右上角链接样式 */
+/* 右上角链接样式 */
 .more-link {
   font-size: 14px;
   color: #63e2b7;

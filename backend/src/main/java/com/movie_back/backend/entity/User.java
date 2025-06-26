@@ -18,7 +18,6 @@ import java.util.Set;
 @Entity
 @Table(name = "users")
 @Data
-// **核心修改**: 从 exclude 中移除 "userRatings"
 @EqualsAndHashCode(exclude = { "reviews" })
 @ToString(exclude = { "reviews" })
 public class User implements UserDetails {

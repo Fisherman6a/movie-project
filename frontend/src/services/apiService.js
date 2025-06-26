@@ -121,10 +121,6 @@ export default {
     voteOnReview(reviewId, direction) {
         return apiClient.post(`/reviews/${reviewId}/vote`, { direction });
     },
-    // **核心修改**: rateMovie 已被 addReview 替代，可以移除
-    // rateMovie(movieId, userId, score) {
-    //     return apiClient.post(`/movies/${movieId}/ratings?userId=${userId}`, { score });
-    // },
 
     // 用户API
     updateUserProfile(data) {

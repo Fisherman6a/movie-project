@@ -5,7 +5,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Entity
-// **核心修改 1**: 增加表注解，并定义 user_id 和 movie_id 的联合唯一约束
+// 增加表注解，并定义 user_id 和 movie_id 的联合唯一约束
 @Table(name = "reviews", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "user_id", "movie_id" })
 })
@@ -23,7 +23,6 @@ public class Review {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // **核心修改 2**: 新增评分字段
     @Column(nullable = false)
     private Integer score; // 1-10 分制
 

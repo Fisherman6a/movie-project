@@ -57,7 +57,7 @@
 
 <style scoped>
 .site-footer {
-  /* **核心修改**: 增加顶部外边距，与页面内容隔开 */
+  /* 增加顶部外边距，与页面内容隔开 */
   margin-top: 30px;
 
   background-color: #18181c;

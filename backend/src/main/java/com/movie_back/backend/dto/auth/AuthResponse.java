@@ -1,7 +1,7 @@
 package com.movie_back.backend.dto.auth;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime; // 新增导入
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -17,5 +17,5 @@ public class AuthResponse {
     private String personalWebsite;
     private LocalDate birthDate;
     private String bio;
-    private LocalDateTime createdAt; // <-- 新增此字段
+    private LocalDateTime createdAt;
 }

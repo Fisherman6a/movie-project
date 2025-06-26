@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-// @RequiredArgsConstructor // 移除此注解，因为我们将手动创建构造函数
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
@@ -56,7 +55,6 @@ public class UserService implements UserDetailsService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         // 默认注册为普通用户
         user.setRole(Role.ROLE_USER);
-        // 为新用户设置一个默认头像 (使用 pravatar 服务生成一个唯一的随机头像)
         user.setProfileImageUrl("https://i.ibb.co/N23MW2Gp/userdefault.jpg");
 
         User savedUser = userRepository.save(user);
@@ -89,7 +87,7 @@ public class UserService implements UserDetailsService {
         user.setBirthDate(profileData.getBirthDate());
         user.setBio(profileData.getBio());
 
-        // 新增：如果请求中包含 profileImageUrl，则更新它
+        // 如果请求中包含 profileImageUrl，则更新它
         if (profileData.getProfileImageUrl() != null && !profileData.getProfileImageUrl().isEmpty()) {
             user.setProfileImageUrl(profileData.getProfileImageUrl());
         }
@@ -159,9 +157,9 @@ public class UserService implements UserDetailsService {
     @Transactional
     public void changeUserPhone(User currentUser, String newPhone) {
         userRepository.findByPhone(newPhone).ifPresent(user -> {
-        if (!user.getId().equals(currentUser.getId())) {
-        throw new IllegalStateException("该电话号码已被其他用户绑定");
-        }
+            if (!user.getId().equals(currentUser.getId())) {
+                throw new IllegalStateException("该电话号码已被其他用户绑定");
+            }
         });
         currentUser.setPhone(newPhone);
         userRepository.save(currentUser);

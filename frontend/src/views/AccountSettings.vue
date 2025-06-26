@@ -62,18 +62,15 @@
           </n-form>
         </n-card>
 
-        <!-- ================== 修改开始 ================== -->
         <!-- 使用 v-if 指令，仅在 activeKey 为 'basic' 时显示此按钮 -->
         <n-flex v-if="activeKey === 'basic'" justify="end" style="margin-top: 24px">
           <n-button type="primary" @click="handleSave" :loading="saving">保存修改</n-button>
         </n-flex>
-        <!-- ================== 修改结束 ================== -->
 
       </n-gi>
     </n-grid>
   </n-layout-content>
 
-  <!-- ... 模态框部分保持不变 ... -->
   <n-modal v-model:show="showPasswordModal" preset="card" title="修改密码" style="width: 450px">
     <n-form ref="passwordFormRef" :model="passwordForm" :rules="passwordRules" label-placement="left" label-width="80">
       <n-form-item label="旧密码" path="oldPassword">
