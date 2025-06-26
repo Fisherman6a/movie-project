@@ -61,22 +61,18 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 允许所有浏览器的 OPTIONS 预检请求
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                        // 定义无需认证即可访问的公开端点
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-
-                        // 允许对电影、演员、导演信息的 GET 请求
-                        .requestMatchers(HttpMethod.GET, "/api/movies/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/actors/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/directors/**").permitAll()
-
-                        // 修复：允许公开访问用户评论列表
-                        .requestMatchers(HttpMethod.GET, "/api/users/{userId}/reviews").permitAll()
-
-                        // 除以上定义的公开路径外，所有其他请求都需要认证
+                        // 明确列出所有需要公开访问的路径
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html", // 明确允许html文件
+                                HttpMethod.GET.name(), "/api/movies/**",
+                                HttpMethod.GET.name(), "/api/actors/**",
+                                HttpMethod.GET.name(), "/api/directors/**",
+                                HttpMethod.GET.name(), "/api/users/{userId}/reviews")
+                        .permitAll()
+                        // 其他所有未明确允许的请求，都需要进行认证
                         // 更具体的角色权限已由 Controller 中的 @PreAuthorize 注解处理
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

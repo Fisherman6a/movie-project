@@ -32,7 +32,8 @@ INSERT INTO
         `bio`,
         `birth_date`,
         `created_at`,
-        `phone`
+        `phone`,
+        `profile_image_url`
     )
 VALUES (
         111,
@@ -43,7 +44,8 @@ VALUES (
         '科幻电影爱好者，喜欢诺兰和卡梅隆。',
         '1990-05-15',
         NOW(),
-        '13800138001'
+        '13800138001',
+        'https://i.ibb.co/xtMwLQdv/userdefault-1.jpg'
     ),
     (
         211,
@@ -54,7 +56,8 @@ VALUES (
         '中国科幻的忠实拥趸。',
         '1995-08-20',
         NOW(),
-        NULL
+        NULL,
+        'https://i.ibb.co/xtMwLQdv/userdefault-1.jpg'
     ),
     (
         311,
@@ -65,7 +68,8 @@ VALUES (
         '英式喜剧发烧友。',
         '1988-01-30',
         NOW(),
-        '13800138003'
+        '13800138003',
+        'https://i.ibb.co/xtMwLQdv/userdefault-1.jpg'
     );
 -- =================================================================
 -- 2. 插入导演 (directors)

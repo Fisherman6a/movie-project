@@ -27,7 +27,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
             "FROM Review r WHERE r.movie.id = :movieId GROUP BY 1")
     List<RatingDistributionDTO> getRatingDistributionForMovie(Long movieId);
 
-    // **核心修正**: 添加调用存储过程的方法
+    // 添加调用存储过程的方法
     @Procedure(name = "get_reviews_by_movie_title")
     List<Review> findReviewsByMovieTitleProcedure(@Param("movieTitle") String movieTitle);
 }

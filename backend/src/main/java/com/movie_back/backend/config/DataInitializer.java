@@ -20,7 +20,7 @@ public class DataInitializer implements CommandLineRunner {
     @Transactional
     public void run(String... args) throws Exception {
 
-        // ↓↓↓ 新增逻辑：如果 admin 用户已存在，则删除它 ↓↓↓
+        // 如果 admin 用户已存在，则删除它
         userRepository.findByUsername("admin").ifPresent(userRepository::delete);
 
         // 创建一个管理员用户（如果不存在）
@@ -35,7 +35,7 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println("Created ADMIN user: admin");
         }
 
-        // ↓↓↓ 新增逻辑：如果 user 用户已存在，则删除它 ↓↓↓
+        // 如果 user 用户已存在，则删除它
         userRepository.findByUsername("user").ifPresent(userRepository::delete);
 
         // 创建一个普通用户（如果不存在）

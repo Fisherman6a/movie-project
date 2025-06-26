@@ -78,7 +78,7 @@ VALUES (
         NOW()
     );
 -- 测试 2: after_review_update 触发器
--- 我们刚才插入的6分评论，修改为2分。
+-- 刚才插入的6分评论，现在将其修改为2分。
 -- 步骤：更新评论分数，然后查看分数
 UPDATE reviews
 SET
@@ -131,4 +131,4 @@ FROM
 -- 视图验证
 SELECT * FROM v_review_details;
 
-ALTER TABLE users ADD COLUMN phone VARCHAR(20)
+ALTER TABLE users ADD COLUMN phone VARCHAR(2

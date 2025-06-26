@@ -1,5 +1,5 @@
 import { createApp } from 'vue';
-import { createPinia } from 'pinia'; // 引入 Pinia
+import { createPinia } from 'pinia';
 import App from './App.vue';
 import router from './router';
 import naive from 'naive-ui';
@@ -8,9 +8,9 @@ import 'vfonts/Lato.css';
 import 'vfonts/FiraCode.css';
 
 const app = createApp(App);
-const pinia = createPinia(); // 创建 Pinia 实例 
+const pinia = createPinia();
 
-app.use(pinia); // 使用 Pinia
+app.use(pinia);
 app.use(router);
 app.use(naive);
 
