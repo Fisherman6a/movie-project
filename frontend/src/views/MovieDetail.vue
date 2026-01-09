@@ -156,8 +156,11 @@
   <n-empty v-else description="电影信息加载失败或不存在。" />
 
   <n-modal v-model:show="showEditModal" preset="card" style="width: 600px" title="编辑评论">
-    <n-input v-model:value="editingReview.commentText" type="textarea" placeholder="输入新的评论内容..."
-      :autosize="{ minRows: 5 }" />
+    <n-space vertical>
+      <n-rate v-model:value="editingReview.score" size="large" />
+      <n-input v-model:value="editingReview.commentText" type="textarea" placeholder="输入新的评论内容..."
+        :autosize="{ minRows: 5 }" />
+    </n-space>
     <template #footer>
       <n-flex justify="end">
         <n-button @click="showEditModal = false">取消</n-button>
@@ -199,7 +202,7 @@ const ratingText = ["很差", "较差", "还行", "推荐", "力荐"];
 
 const showEditModal = ref(false);
 const isUpdating = ref(false);
-const editingReview = ref({ id: null, commentText: '' });
+const editingReview = ref({ id: null, commentText: '', score: 0 });
 
 const averageRatingDescription = computed(() => {
   if (typeof movie.value?.averageRating !== 'number' || movie.value.averageRating <= 0) {
@@ -211,8 +214,10 @@ const averageRatingDescription = computed(() => {
   return ratingText[index];
 });
 
+// 打开、更新、删除评论的逻辑
 const openEditModal = (review) => {
-  editingReview.value = { ...review };
+  // 后端score是10分制，前端rate组件是5分制，这里做转换
+  editingReview.value = { ...review, score: review.score / 2 };
   showEditModal.value = true;
 };
 
@@ -223,17 +228,17 @@ const handleUpdateReview = async () => {
   }
   isUpdating.value = true;
   try {
-    // 假设 updateReview API 可以接受包含评论和分数的新对象
-    await apiService.updateReview(editingReview.value.id, {
+    // 构造正确的请求体，并将5分制转回10分制
+    const payload = {
       commentText: editingReview.value.commentText,
-      score: editingReview.value.score // 确保分数也被传递
-    });
+      score: editingReview.value.score * 2
+    };
+    await apiService.updateReview(editingReview.value.id, payload);
     message.success('评论更新成功');
     showEditModal.value = false;
     await fetchMovieData();
   } catch (error) {
-    message.error('更新失败');
-    console.error(error);
+    message.error('更新失败: ' + (error.response?.data?.message || error.message));
   } finally {
     isUpdating.value = false;
   }
@@ -245,8 +250,7 @@ const handleDeleteReview = async (reviewId) => {
     message.success('删除成功');
     await fetchMovieData();
   } catch (error) {
-    message.error('删除失败');
-    console.error(error);
+    message.error('删除失败: ' + (error.response?.data?.message || error.message));
   }
 };
 
@@ -294,10 +298,11 @@ const submitReview = async () => {
   }
   isSubmitting.value = true;
   try {
+    // 此处 myRating 是5分制，apiService内部会处理转换为10分制
     await apiService.addReview(
       props.id,
       authStore.userId,
-      myRating.value, // 1-5 星
+      myRating.value,
       myComment.value.trim()
     );
     message.success("评价成功！");
@@ -306,7 +311,6 @@ const submitReview = async () => {
     await fetchMovieData(); // 重新加载数据
   } catch (error) {
     message.error(error.response?.data?.message || "提交失败，可能您已评价过该电影。");
-    console.error(error);
   } finally {
     isSubmitting.value = false;
   }
@@ -319,10 +323,12 @@ const handleVote = async (review, direction) => {
   }
   try {
     const response = await apiService.voteOnReview(review.id, direction);
-    review.likes = response.data.likes;
+    const votedReview = reviews.value.find(r => r.id === review.id);
+    if (votedReview) {
+      votedReview.likes = response.data.likes;
+    }
   } catch (error) {
     message.error('投票失败');
-    console.error(error);
   }
 };
 

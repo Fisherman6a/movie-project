@@ -39,6 +39,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { useSearchStore } from '@/stores/searchStore';
 import { NLayoutHeader, NFlex, NText, NInputGroup, NInput, NButton, NSpace, NAvatar, NDropdown, useMessage } from 'naive-ui';
+import apiService from '@/services/apiService';
 
 const router = useRouter();
 const message = useMessage();
@@ -90,10 +91,21 @@ const handleSearch = () => {
   }
 };
 
-const handleLogout = () => {
-  authStore.clearAuth();
-  message.success('已成功登出');
-  router.push('/');
+const handleLogout = async () => {
+  try {
+    // 调用后端登出接口
+    await apiService.logout();
+    // 清除前端存储
+    authStore.clearAuth();
+    message.success('已成功登出');
+    router.push('/');
+  } catch (error) {
+    console.error('登出失败', error);
+    // 即使后端登出失败，也清除前端存储
+    authStore.clearAuth();
+    message.warning('登出成功（部分失败）');
+    router.push('/');
+  }
 };
 
 const handleDropdownSelect = (key) => {

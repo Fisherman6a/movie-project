@@ -64,6 +64,7 @@ public class SecurityConfig {
                         // 明确列出所有需要公开访问的路径
                         .requestMatchers(
                                 "/api/auth/**",
+                                "/api/verification/**",  // 新增：验证码接口公开访问
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",

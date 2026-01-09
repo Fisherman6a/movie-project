@@ -135,6 +135,7 @@ const pagination = ref({ page: 1, pageSize: 20, pageCount: 1 });
 const fetchData = async () => {
   loading.value = true;
   // 在准备发送给后端的参数时，我们不需要 releaseYear，只需要 yearStart/yearEnd
+  // 加一行elint忽略releaseYear报错
   // eslint-disable-next-line no-unused-vars
   const { releaseYear, ...apiParams } = filterParams.value;
   const params = {

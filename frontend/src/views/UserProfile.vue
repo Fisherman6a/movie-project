@@ -49,7 +49,10 @@
               的评论
             </template>
             <template #description>
-              <n-text depth="3">发表于: {{ new Date(review.createdAt).toLocaleString() }}</n-text>
+              <n-space align="center">
+                <n-rate readonly :value="review.score / 2" allow-half size="small" />
+                <n-text depth="3">发表于: {{ new Date(review.createdAt).toLocaleString() }}</n-text>
+              </n-space>
             </template>
             {{ review.commentText }}
           </n-thing>
@@ -67,7 +70,7 @@
 import { ref, onMounted, nextTick, computed } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import apiService from '@/services/apiService';
-import { NLayoutContent, NCard, NSpace, NAvatar, NH1, NH2, NP, NText, NButton, NIcon, NList, NListItem, NThing, NSpin, NEmpty, NInput, NInputGroup, useMessage } from 'naive-ui';
+import { NLayoutContent, NCard, NSpace, NAvatar, NH1, NH2, NP, NText, NButton, NIcon, NList, NListItem, NThing, NSpin, NEmpty, NInput, NInputGroup, useMessage, NRate } from 'naive-ui';
 import { Link as LinkIcon, TimeOutline as TimeIcon } from '@vicons/ionicons5';
 
 const authStore = useAuthStore();
@@ -79,42 +82,36 @@ const loadingReviews = ref(true);
 const isEditingBio = ref(false);
 const isSavingBio = ref(false);
 const editingBioText = ref('');
-const bioInputRef = ref(null); // 用于在编辑时自动聚焦输入框
+const bioInputRef = ref(null);
 
-// 开始编辑
 const startEditingBio = async () => {
   isEditingBio.value = true;
   editingBioText.value = user.value.bio || '';
-  // 等待 DOM 更新后，聚焦到输入框
   await nextTick();
   bioInputRef.value?.focus();
 };
 
-// 取消编辑
 const cancelEditingBio = () => {
   isEditingBio.value = false;
 };
 
-// 保存编辑
 const saveBio = async () => {
   isSavingBio.value = true;
   try {
-    // 准备提交给后端的数据包，包含所有可编辑字段
     const payload = {
       username: user.value.username,
       personalWebsite: user.value.personalWebsite,
       birthDate: user.value.birthDate,
-      bio: editingBioText.value, // 使用编辑后的新签名
+      bio: editingBioText.value,
     };
     await apiService.updateUserProfile(payload);
 
-    // 更新成功后，同步本地状态
     user.value.bio = editingBioText.value;
     authStore.user.bio = editingBioText.value;
     localStorage.setItem('user', JSON.stringify(authStore.user));
 
     message.success('签名更新成功！');
-    isEditingBio.value = false; // 退出编辑状态
+    isEditingBio.value = false;
   } catch (error) {
     message.error('保存失败，请重试');
     console.error(error);
@@ -128,13 +125,12 @@ const formattedJoinDate = computed(() => {
     return '';
   }
   const date = new Date(user.value.createdAt);
-  // 将日期格式化为 "YYYY年MM月DD日"
   return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
 });
 
 onMounted(async () => {
   if (authStore.user) {
-    user.value = { ...authStore.user }; // 使用副本以避免意外修改
+    user.value = { ...authStore.user };
   }
 
   loadingReviews.value = true;

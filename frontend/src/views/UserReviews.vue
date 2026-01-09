@@ -20,7 +20,10 @@
               </n-space>
             </template>
             <template #description>
-              <n-text depth="3">发表于: {{ new Date(review.createdAt).toLocaleString() }}</n-text>
+              <n-space align="center">
+                <n-rate readonly :value="review.score / 2" allow-half size="small" />
+                <n-text depth="3">发表于: {{ new Date(review.createdAt).toLocaleString() }}</n-text>
+              </n-space>
             </template>
             {{ review.commentText }}
           </n-thing>
@@ -33,11 +36,15 @@
   </n-layout-content>
 
   <n-modal v-model:show="showEditModal" preset="card" style="width: 600px" title="编辑评论">
-    <n-input v-model:value="editingCommentText" type="textarea" placeholder="输入新的评论内容..." :autosize="{ minRows: 5 }" />
+    <n-space vertical>
+      <n-rate v-model:value="editingScore" :count="5" size="large" allow-half />
+      <n-input v-model:value="editingCommentText" type="textarea" placeholder="输入新的评论内容..."
+        :autosize="{ minRows: 5 }" />
+    </n-space>
     <template #footer>
       <n-flex justify="end">
         <n-button @click="showEditModal = false">取消</n-button>
-        <n-button type="primary" @click="handleUpdate">保存修改</n-button>
+        <n-button type="primary" @click="handleUpdate" :loading="isUpdating">保存修改</n-button>
       </n-flex>
     </template>
   </n-modal>
@@ -47,10 +54,9 @@
 import { ref, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import apiService from '@/services/apiService';
-// import TheHeader from '@/components/TheHeader.vue';
 import {
   NLayoutContent, NH2, NList, NListItem, NThing, NButton, NSpace,
-  NPopconfirm, NSpin, NEmpty, NModal, NInput, NFlex, NText, useMessage
+  NPopconfirm, NSpin, NEmpty, NModal, NInput, NFlex, NText, useMessage, NRate
 } from 'naive-ui';
 
 const authStore = useAuthStore();
@@ -58,10 +64,11 @@ const message = useMessage();
 const myReviews = ref([]);
 const loading = ref(true);
 
-// 编辑模态框相关
 const showEditModal = ref(false);
-const editingReviewId = ref(null);
+const isUpdating = ref(false);
+const editingReview = ref(null);
 const editingCommentText = ref('');
+const editingScore = ref(0); // 使用5分制
 
 const fetchMyReviews = async () => {
   loading.value = true;
@@ -77,8 +84,9 @@ const fetchMyReviews = async () => {
 };
 
 const openEditModal = (review) => {
-  editingReviewId.value = review.id;
+  editingReview.value = review;
   editingCommentText.value = review.commentText;
+  editingScore.value = review.score / 2; // 后端10分制转为前端5分制
   showEditModal.value = true;
 };
 
@@ -87,13 +95,21 @@ const handleUpdate = async () => {
     message.warning('评论内容不能为空');
     return;
   }
+  isUpdating.value = true;
   try {
-    await apiService.updateReview(editingReviewId.value, editingCommentText.value);
+    // 构造正确的请求体，并将5分制转回10分制
+    const payload = {
+      commentText: editingCommentText.value,
+      score: editingScore.value * 2
+    };
+    await apiService.updateReview(editingReview.value.id, payload);
     message.success('评论更新成功');
     showEditModal.value = false;
-    fetchMyReviews(); // 重新加载列表
+    fetchMyReviews();
   } catch (error) {
-    message.error('更新失败');
+    message.error('更新失败: ' + (error.response?.data?.message || error.message));
+  } finally {
+    isUpdating.value = false;
   }
 };
 
@@ -101,7 +117,8 @@ const handleDelete = async (reviewId) => {
   try {
     await apiService.deleteReview(reviewId);
     message.success('删除成功');
-    fetchMyReviews(); // 重新加载列表
+    // 过滤掉已删除的评论，实现即时刷新
+    myReviews.value = myReviews.value.filter(review => review.id !== reviewId);
   } catch (error) {
     message.error('删除失败');
   }

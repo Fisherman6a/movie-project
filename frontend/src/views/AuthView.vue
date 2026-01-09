@@ -12,6 +12,16 @@
               <n-input v-model:value="loginFormValue.password" type="password" show-password-on="mousedown"
                 placeholder="请输入密码" @keyup.enter="handleLogin" />
             </n-form-item-row>
+            <n-form-item-row label="验证码" path="captcha">
+              <n-input-group>
+                <n-input v-model:value="loginFormValue.captcha" placeholder="请输入验证码"
+                  style="width: 60%;" @keyup.enter="handleLogin" />
+                <img v-if="captchaImage" :src="captchaImage" alt="验证码"
+                  @click="refreshCaptcha"
+                  style="width: 38%; height: 34px; cursor: pointer; border: 1px solid #d9d9d9; border-radius: 3px; margin-left: 2%;"
+                  title="点击刷新验证码" />
+              </n-input-group>
+            </n-form-item-row>
           </n-form>
           <n-button type="primary" block strong :loading="loginLoading" @click="handleLogin">
             登录
@@ -50,11 +60,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   NCard, NTabs, NTabPane, NForm, NFormItemRow,
-  NInput, NButton, NFlex, useMessage
+  NInput, NButton, NFlex, NInputGroup, useMessage
 } from 'naive-ui';
 import { useAuthStore } from '@/stores/authStore';
 import apiService from '@/services/apiService';
@@ -69,15 +79,40 @@ defineProps({
 const router = useRouter();
 const message = useMessage();
 const authStore = useAuthStore();
+
+// 验证码相关
+const captchaImage = ref('');
+const captchaId = ref('');
+
+// 获取验证码
+const refreshCaptcha = async () => {
+  try {
+    const response = await apiService.getCaptcha();
+    captchaImage.value = response.data.image;
+    captchaId.value = response.data.captchaId;
+  } catch (error) {
+    console.error('获取验证码失败', error);
+    message.error('获取验证码失败，请刷新页面重试');
+  }
+};
+
+// 组件挂载时获取验证码
+onMounted(() => {
+  refreshCaptcha();
+});
+
+// 登录表单
 const loginFormRef = ref(null);
 const loginLoading = ref(false);
 const loginFormValue = ref({
   username: '',
   password: '',
+  captcha: '',
 });
 const loginRules = {
   username: { required: true, message: '请输入用户名', trigger: 'blur' },
   password: { required: true, message: '请输入密码', trigger: 'blur' },
+  captcha: { required: true, message: '请输入验证码', trigger: 'blur' },
 };
 
 const handleLogin = async (e) => {
@@ -85,24 +120,50 @@ const handleLogin = async (e) => {
   try {
     await loginFormRef.value?.validate();
     loginLoading.value = true;
-    const response = await apiService.login(loginFormValue.value);
+
+    // 添加验证码ID和验证码
+    const loginData = {
+      username: loginFormValue.value.username,
+      password: loginFormValue.value.password,
+      captchaId: captchaId.value,
+      captcha: loginFormValue.value.captcha,
+    };
+
+    const response = await apiService.login(loginData);
     authStore.setAuth(response.data);
     message.success('登录成功！');
     router.push('/');
   } catch (errors) {
-    console.log('登录表单验证失败或API出错', errors);
+    console.log('登录失败', errors);
+
+    // 验证码错误后刷新验证码
+    refreshCaptcha();
+    loginFormValue.value.captcha = '';
+
     if (errors && Array.isArray(errors)) {
-      message.error('请输入用户名和密码。');
+      // 表单验证失败
+      message.error('请填写完整的登录信息');
     } else if (errors.response) {
-      message.error(errors.response.data.message || '登录失败，请检查您的凭据');
+      // 后端返回的错误
+      const status = errors.response.status;
+      const errorMessage = errors.response.data.message;
+
+      if (status === 400 && errorMessage === '验证码错误或已过期') {
+        message.error('验证码错误，请重新输入');
+      } else if (status === 401 || status === 403) {
+        message.error('用户名或密码错误');
+      } else {
+        message.error(errorMessage || '登录失败，请稍后重试');
+      }
     } else {
-      message.error('发生未知错误');
+      message.error('网络错误，请检查网络连接');
     }
   } finally {
     loginLoading.value = false;
   }
 };
 
+// 注册表单
 const registerFormRef = ref(null);
 const registerLoading = ref(false);
 const registerFormValue = ref({

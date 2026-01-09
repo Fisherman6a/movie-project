@@ -20,11 +20,19 @@ apiClient.interceptors.request.use(config => {
 });
 
 export default {
+    // 获取图形验证码
+    getCaptcha() {
+        return apiClient.get('/verification/captcha');
+    },
+
     login(credentials) {
         return apiClient.post('/auth/login', credentials);
     },
     register(userInfo) {
         return apiClient.post('/auth/register', userInfo);
+    },
+    logout() {
+        return apiClient.post('/auth/logout');
     },
 
     getHotMovies(limit = 10) {

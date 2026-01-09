@@ -1,5 +1,6 @@
 package com.movie_back.backend.security;
 
+import com.movie_back.backend.service.TokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,6 +23,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
+    private final TokenService tokenService; // 新增：Redis Token 管理
 
     @Override
     protected void doFilterInternal(
@@ -51,6 +53,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 如果用户名不为空，并且当前安全上下文中没有认证信息
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            // 新增：检查 token 是否在 Redis 中存在且未被加入黑名单
+            if (!tokenService.isTokenValid(jwt)) {
+                // Token 无效（已登出或过期），拒绝请求
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             // 从数据库加载用户信息
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
