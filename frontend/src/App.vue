@@ -11,9 +11,6 @@
           </div>
 
         </n-layout>
-
-        <!-- WebSocket 通知处理组件 -->
-        <NotificationHandler />
       </n-dialog-provider>
     </n-message-provider>
   </n-config-provider>
@@ -23,7 +20,6 @@
 import { NConfigProvider, NMessageProvider, NDialogProvider, NLayout, darkTheme } from 'naive-ui';
 import TheHeader from '@/components/TheHeader.vue';
 import TheFooter from '@/components/TheFooter.vue';
-import NotificationHandler from '@/components/NotificationHandler.vue';
 </script>
 
 <style>

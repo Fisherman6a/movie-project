@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -19,8 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ElasticsearchIndexInitializer {
 
-    private final MovieRepository movieRepository;
-    private final ElasticsearchService elasticsearchService;
+    private final IndexInitService indexInitService;
 
     /**
      * 应用启动时执行索引初始化
@@ -30,9 +31,6 @@ public class ElasticsearchIndexInitializer {
     public CommandLineRunner initElasticsearchIndex() {
         return args -> {
             // 检查是否需要初始化索引
-            // 如果不需要自动初始化,可以注释掉下面的代码
-            // 或者通过 application.properties 配置开关
-
             boolean shouldInit = false; // 默认关闭自动初始化
 
             // 可以通过环境变量或配置文件控制
@@ -48,6 +46,23 @@ public class ElasticsearchIndexInitializer {
             }
 
             log.info("开始初始化 Elasticsearch 索引...");
+            indexInitService.rebuildAllIndexes();
+        };
+    }
+
+    /**
+     * 内部服务类，用于在事务上下文中执行索引初始化
+     */
+    @Slf4j
+    @Component
+    @RequiredArgsConstructor
+    static class IndexInitService {
+
+        private final MovieRepository movieRepository;
+        private final ElasticsearchService elasticsearchService;
+
+        @Transactional(readOnly = true)
+        public void rebuildAllIndexes() {
             try {
                 List<Movie> allMovies = movieRepository.findAll();
                 log.info("找到 {} 部电影,开始索引...", allMovies.size());
@@ -77,6 +92,6 @@ public class ElasticsearchIndexInitializer {
             } catch (Exception e) {
                 log.error("Elasticsearch 索引初始化失败", e);
             }
-        };
+        }
     }
 }

@@ -83,26 +83,31 @@ public class ReviewController {
             @RequestParam Long likerId,
             @RequestBody Map<String, String> payload) {
         String direction = payload.get("direction");
-        ReviewDTO updatedReview = reviewService.voteOnReview(reviewId, direction);
 
-        // 如果是点赞，发送通知消息
-        if ("up".equalsIgnoreCase(direction)) {
-            // 获取点赞者信息
-            User liker = userRepository.findById(likerId)
-                    .orElseThrow(() -> new RuntimeException("用户不存在"));
+        try {
+            // 调用新的voteOnReview方法，传入userId
+            ReviewDTO updatedReview = reviewService.voteOnReview(reviewId, likerId, direction);
 
-            // 从 DTO 中获取评论相关信息
-            messageProducer.sendLikeNotification(
-                    reviewId,
-                    updatedReview.getUserId(),  // 评论作者ID
-                    likerId,
-                    liker.getUsername(),
-                    updatedReview.getMovieId(),
-                    updatedReview.getMovieTitle()
-            );
+            // 如果是点赞，发送通知消息到RabbitMQ（仅更新数据库，不弹窗）
+            if ("up".equalsIgnoreCase(direction)) {
+                User liker = userRepository.findById(likerId)
+                        .orElseThrow(() -> new RuntimeException("用户不存在"));
+
+                messageProducer.sendLikeNotification(
+                        reviewId,
+                        updatedReview.getUserId(),  // 评论作者ID
+                        likerId,
+                        liker.getUsername(),
+                        updatedReview.getMovieId(),
+                        updatedReview.getMovieTitle()
+                );
+            }
+
+            return ResponseEntity.ok(updatedReview);
+        } catch (IllegalStateException e) {
+            // 返回友好的错误信息（重复点赞或未点赞）
+            return ResponseEntity.badRequest().body(null);
         }
-
-        return ResponseEntity.ok(updatedReview);
     }
 
     // API端点以调用存储过程

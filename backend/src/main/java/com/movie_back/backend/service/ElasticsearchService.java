@@ -17,6 +17,7 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,6 +38,7 @@ public class ElasticsearchService {
     /**
      * 将 MySQL 的 Movie 实体同步到 ES
      */
+    @Transactional(readOnly = true)
     public void indexMovie(Long movieId) {
         try {
             Movie movie = movieRepository.findById(movieId).orElse(null);

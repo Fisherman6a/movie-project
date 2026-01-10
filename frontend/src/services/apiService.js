@@ -172,4 +172,27 @@ export default {
     deleteAllReadNotifications(userId) {
         return apiClient.delete(`/notifications/user/${userId}/read`);
     },
+
+    // 文件上传 API
+    uploadAvatar(formData) {
+        return apiClient.post('/upload/avatar', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+    },
+    uploadPoster(formData) {
+        return apiClient.post('/upload/poster', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+    },
+    uploadPersonPhoto(formData) {
+        return apiClient.post('/upload/person', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+    },
 };

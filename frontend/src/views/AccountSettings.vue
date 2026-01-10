@@ -127,7 +127,6 @@ import {
   NInputGroup, NAvatar, NUpload, NButton, NSpace, NFlex, NDatePicker,
   NText, NModal, useMessage,
 } from "naive-ui";
-import axios from "axios";
 
 const authStore = useAuthStore();
 const message = useMessage();
@@ -304,15 +303,15 @@ const menuOptions = [{ label: "基本资料", key: "basic" }, { label: "账号�
 const customAvatarUploadRequest = async ({ file, onFinish, onError }) => {
   uploadingToHost.value = true;
   const formData = new FormData();
-  formData.append("image", file.file);
-  formData.append("key", "4312ec520960fe609d17eb3f8a99ca5e");
+  formData.append("file", file.file);  // 修改为 "file"
   try {
-    const response = await axios.post("https://api.imgbb.com/1/upload", formData);
-    profileForm.value.profileImageUrl = response.data.data.url;
-    message.success("头像预览更新成功，请点击下方“保存修改”以生效。");
+    // 使用后端 MinIO 上传接口
+    const response = await apiService.uploadAvatar(formData);
+    profileForm.value.profileImageUrl = response.data.url;
+    message.success("头像预览更新成功，请点击下方\"保存修改\"以生效。");
     onFinish();
   } catch (error) {
-    message.error("头像上传失败: " + (error.response?.data?.error?.message || error.message));
+    message.error("头像上传失败: " + (error.response?.data?.message || error.message));
     onError();
   } finally {
     uploadingToHost.value = false;

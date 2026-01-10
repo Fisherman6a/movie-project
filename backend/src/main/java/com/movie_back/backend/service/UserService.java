@@ -3,9 +3,11 @@ package com.movie_back.backend.service;
 import com.movie_back.backend.dto.user.UserDTO;
 import com.movie_back.backend.dto.user.UserProfileUpdateDTO;
 import com.movie_back.backend.dto.user.UserRegistrationRequest;
+import com.movie_back.backend.entity.Notification;
 import com.movie_back.backend.entity.Role;
 import com.movie_back.backend.entity.User;
 import com.movie_back.backend.exception.ResourceNotFoundException;
+import com.movie_back.backend.repository.NotificationRepository;
 import com.movie_back.backend.repository.UserRepository;
 
 import java.util.List;
@@ -24,11 +26,15 @@ public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final NotificationRepository notificationRepository;
 
     // 手动创建构造函数，并对PasswordEncoder使用@Lazy注解
-    public UserService(UserRepository userRepository, @Lazy PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository,
+                       @Lazy PasswordEncoder passwordEncoder,
+                       NotificationRepository notificationRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.notificationRepository = notificationRepository;
     }
 
     // Spring Security 会调用此方法来加载用户信息
@@ -58,6 +64,21 @@ public class UserService implements UserDetailsService {
         user.setProfileImageUrl("https://i.ibb.co/N23MW2Gp/userdefault.jpg");
 
         User savedUser = userRepository.save(user);
+
+        // 发送欢迎通知
+        Notification welcomeNotification = Notification.builder()
+            .userId(savedUser.getId())
+            .type(Notification.NotificationType.SYSTEM)
+            .title("欢迎加入")
+            .content("欢迎来到电影评论平台！开始探索和分享您对电影的见解吧。")
+            .relatedId(null)
+            .relatedType(null)
+            .triggerUserId(null)
+            .triggerUsername("系统")
+            .build();
+
+        notificationRepository.save(welcomeNotification);
+
         return convertToDTO(savedUser);
     }
 

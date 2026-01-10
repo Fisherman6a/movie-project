@@ -37,7 +37,8 @@
 import { ref, computed } from 'vue';
 import { NForm, NFormItem, NInput, NDatePicker, NSpace, NUpload, NButton, NIcon, useMessage, NSelect } from 'naive-ui';
 import { CloudUploadOutline as CloudUploadIcon } from '@vicons/ionicons5';
-import axios from 'axios';
+import apiService from '@/services/apiService';
+// import axios from 'axios';  // 已改用 MinIO，不再需要 axios
 
 const props = defineProps({ modelValue: Object });
 const emit = defineEmits(['update:modelValue']);
@@ -67,16 +68,22 @@ const rules = {
 const handleUpload = async ({ file, onFinish, onError }) => {
     uploading.value = true;
     const formData = new FormData();
-    formData.append("image", file.file);
-    formData.append("key", "4312ec520960fe609d17eb3f8a99ca5e");
+    formData.append("file", file.file);  // MinIO 使用 "file" 字段名
+
+    // ========== 旧代码（ImgBB）已注释 ==========
+    // formData.append("image", file.file);
+    // formData.append("key", "4312ec520960fe609d17eb3f8a99ca5e");
+    // const response = await axios.post("https://api.imgbb.com/1/upload", formData);
+    // model.value.profileImageUrl = response.data.data.url;
+    // ==========================================
 
     try {
-        const response = await axios.post("https://api.imgbb.com/1/upload", formData);
-        model.value.profileImageUrl = response.data.data.url;
+        const response = await apiService.uploadPersonPhoto(formData);
+        model.value.profileImageUrl = response.data.url;
         message.success("上传成功！");
         onFinish();
     } catch (error) {
-        message.error("上传失败: " + (error.response?.data?.error?.message || error.message));
+        message.error("上传失败: " + (error.response?.data?.message || error.message));
         onError();
     } finally {
         uploading.value = false;

@@ -4,10 +4,12 @@ import com.movie_back.backend.dto.review.ReviewDTO;
 import com.movie_back.backend.dto.review.ReviewRequest;
 import com.movie_back.backend.entity.Movie;
 import com.movie_back.backend.entity.Review;
+import com.movie_back.backend.entity.ReviewLike;
 import com.movie_back.backend.entity.User;
 import com.movie_back.backend.entity.VReviewDetail;
 import com.movie_back.backend.exception.ResourceNotFoundException;
 import com.movie_back.backend.repository.MovieRepository;
+import com.movie_back.backend.repository.ReviewLikeRepository;
 import com.movie_back.backend.repository.ReviewRepository;
 import com.movie_back.backend.repository.UserRepository;
 import com.movie_back.backend.repository.VReviewDetailRepository;
@@ -26,13 +28,16 @@ public class ReviewService {
     private final MovieRepository movieRepository;
     private final UserRepository userRepository;
     private final VReviewDetailRepository vReviewDetailRepository;
+    private final ReviewLikeRepository reviewLikeRepository;
 
     public ReviewService(ReviewRepository reviewRepository, MovieRepository movieRepository,
-            UserRepository userRepository, VReviewDetailRepository vReviewDetailRepository) {
+            UserRepository userRepository, VReviewDetailRepository vReviewDetailRepository,
+            ReviewLikeRepository reviewLikeRepository) {
         this.reviewRepository = reviewRepository;
         this.movieRepository = movieRepository;
         this.userRepository = userRepository;
         this.vReviewDetailRepository = vReviewDetailRepository;
+        this.reviewLikeRepository = reviewLikeRepository;
     }
 
     @Transactional(readOnly = true)
@@ -103,27 +108,73 @@ public class ReviewService {
         reviewRepository.deleteById(reviewId);
     }
 
+    /**
+     * 点赞/取消点赞评论
+     * @param reviewId 评论ID
+     * @param userId 点赞用户ID
+     * @param direction "up" 点赞，"down" 取消点赞
+     * @return 更新后的评论DTO
+     */
     @Transactional
-    public ReviewDTO voteOnReview(Long reviewId, String direction) {
+    public ReviewDTO voteOnReview(Long reviewId, Long userId, String direction) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ResourceNotFoundException("未找到 ID 为 " + reviewId + " 的评论"));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("未找到 ID 为 " + userId + " 的用户"));
+
         if ("up".equalsIgnoreCase(direction)) {
+            // 点赞逻辑
+            boolean alreadyLiked = reviewLikeRepository.existsByReviewIdAndUserId(reviewId, userId);
+
+            if (alreadyLiked) {
+                throw new IllegalStateException("您已经点过赞了");
+            }
+
+            // 创建点赞记录
+            ReviewLike reviewLike = ReviewLike.builder()
+                    .review(review)
+                    .user(user)
+                    .build();
+            reviewLikeRepository.save(reviewLike);
+
+            // 增加点赞数
             review.setLikes(review.getLikes() + 1);
+
         } else if ("down".equalsIgnoreCase(direction)) {
-            review.setLikes(review.getLikes() - 1);
+            // 取消点赞逻辑
+            boolean hasLiked = reviewLikeRepository.existsByReviewIdAndUserId(reviewId, userId);
+
+            if (!hasLiked) {
+                throw new IllegalStateException("您还没有点过赞");
+            }
+
+            // 删除点赞记录
+            reviewLikeRepository.deleteByReviewIdAndUserId(reviewId, userId);
+
+            // 减少点赞数
+            review.setLikes(Math.max(0, review.getLikes() - 1)); // 防止负数
+
         } else {
             throw new IllegalArgumentException("无效的投票方向，必须是 'up' 或 'down'");
         }
+
         Review savedReview = reviewRepository.save(review);
         return convertToReviewDTO(savedReview);
+    }
+
+    /**
+     * 检查用户是否已点赞某条评论
+     */
+    @Transactional(readOnly = true)
+    public boolean hasUserLikedReview(Long reviewId, Long userId) {
+        return reviewLikeRepository.existsByReviewIdAndUserId(reviewId, userId);
     }
 
     // 新增调用存储过程的服务方法
     @Transactional(readOnly = true)
     public List<ReviewDTO> getReviewsByMovieTitleFromProcedure(String movieTitle) {
         List<Review> reviews = reviewRepository.findReviewsByMovieTitleProcedure(movieTitle);
-        // 注意：存储过程返回的实体可能不完整，转换DTO时需要处理潜在的Null值
-        // 但在我们这个例子中，存储过程返回的Review是完整的，所以可以直接转换
         return reviews.stream()
                 .map(this::convertToReviewDTO)
                 .collect(Collectors.toList());
@@ -150,7 +201,6 @@ public class ReviewService {
         dto.setCommentText(review.getCommentText());
         dto.setScore(review.getScore());
         dto.setCreatedAt(review.getCreatedAt());
-        // dto.setUpdatedAt(review.getUpdatedAt());
         dto.setLikes(review.getLikes());
 
         // 为了保证在不同调用场景下都能正确填充信息

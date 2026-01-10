@@ -1,11 +1,9 @@
 package com.movie_back.backend.consumer;
 
 import com.movie_back.backend.config.RabbitMQConfig;
-import com.movie_back.backend.dto.NotificationDTO;
 import com.movie_back.backend.dto.message.LikeNotificationMessage;
 import com.movie_back.backend.entity.Notification;
 import com.movie_back.backend.repository.NotificationRepository;
-import com.movie_back.backend.service.WebSocketNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -13,14 +11,13 @@ import org.springframework.stereotype.Component;
 
 /**
  * 点赞通知消费者
- * 监听点赞通知消息，通过 WebSocket 推送给评论作者
+ * 监听点赞通知消息，保存到数据库（不发送WebSocket弹窗）
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class LikeNotificationConsumer {
 
-    private final WebSocketNotificationService webSocketNotificationService;
     private final NotificationRepository notificationRepository;
 
     @RabbitListener(queues = RabbitMQConfig.LIKE_NOTIFICATION_QUEUE)
@@ -35,7 +32,7 @@ public class LikeNotificationConsumer {
                 message.getMovieTitle()
             );
 
-            // 1. 保存通知到数据库（使用 Builder 模式）
+            // 保存通知到数据库（使用 Builder 模式）
             Notification notification = Notification.builder()
                 .userId(message.getAuthorId())
                 .type(Notification.NotificationType.LIKE)
@@ -49,18 +46,6 @@ public class LikeNotificationConsumer {
 
             notificationRepository.save(notification);
             log.info("通知已保存到数据库: notificationId={}", notification.getId());
-
-            // 2. 通过 WebSocket 推送给评论作者
-            NotificationDTO notificationDTO = new NotificationDTO(
-                "LIKE",
-                "评论点赞",
-                notificationMessage,
-                message.getReviewId(),
-                "REVIEW"
-            );
-            webSocketNotificationService.sendNotificationToUser(message.getAuthorId(), notificationDTO);
-
-            log.info("点赞通知推送成功: authorId={}", message.getAuthorId());
 
         } catch (Exception e) {
             log.error("处理点赞通知消息失败: reviewId={}", message.getReviewId(), e);
