@@ -34,6 +34,7 @@ public class MovieService {
     private final ActorRepository actorRepository;
     private final DirectorRepository directorRepository;
     private final ReviewRepository reviewRepository;
+    private final MessageProducerService messageProducer;
 
     @Value("${default.person.image.url}")
     private String defaultPersonImageUrl;
@@ -43,6 +44,10 @@ public class MovieService {
         Movie movie = new Movie();
         setMoviePropertiesFromRequest(movie, request);
         Movie savedMovie = movieRepository.save(movie);
+
+        // 发送索引更新消息
+        messageProducer.sendIndexUpdateMessage(savedMovie.getId(), "CREATE");
+
         return convertToMovieDTO(savedMovie);
     }
 
@@ -61,6 +66,10 @@ public class MovieService {
                 .orElseThrow(() -> new ResourceNotFoundException("Movie not found with id: " + movieId));
         setMoviePropertiesFromRequest(movie, request);
         Movie updatedMovie = movieRepository.save(movie);
+
+        // 发送索引更新消息
+        messageProducer.sendIndexUpdateMessage(updatedMovie.getId(), "UPDATE");
+
         return convertToMovieDTO(updatedMovie);
     }
 
@@ -70,6 +79,9 @@ public class MovieService {
             throw new ResourceNotFoundException("Movie not found with id: " + movieId);
         }
         movieRepository.deleteById(movieId);
+
+        // 发送索引删除消息
+        messageProducer.sendIndexUpdateMessage(movieId, "DELETE");
     }
 
     @Transactional
@@ -85,6 +97,9 @@ public class MovieService {
         // 保留一位小数并更新
         movie.setAverageRating(Math.round(finalAverage * 10.0) / 10.0);
         movieRepository.save(movie);
+
+        // 评分更新后,同步更新 ES 索引
+        messageProducer.sendIndexUpdateMessage(movieId, "UPDATE");
     }
 
     @Transactional(readOnly = true)

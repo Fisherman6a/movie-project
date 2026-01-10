@@ -126,8 +126,8 @@ export default {
     deleteReview(reviewId) {
         return apiClient.delete(`/reviews/${reviewId}`);
     },
-    voteOnReview(reviewId, direction) {
-        return apiClient.post(`/reviews/${reviewId}/vote`, { direction });
+    voteOnReview(reviewId, likerId, direction) {
+        return apiClient.post(`/reviews/${reviewId}/vote?likerId=${likerId}`, { direction });
     },
 
     // 用户API
@@ -148,5 +148,28 @@ export default {
     },
     changePhone(newPhone) {
         return apiClient.put('/users/me/phone', { phone: newPhone });
+    },
+
+    // 通知 API
+    getUserNotifications(userId) {
+        return apiClient.get(`/notifications/user/${userId}`);
+    },
+    getUnreadNotifications(userId) {
+        return apiClient.get(`/notifications/user/${userId}/unread`);
+    },
+    getUnreadCount(userId) {
+        return apiClient.get(`/notifications/user/${userId}/unread/count`);
+    },
+    markNotificationAsRead(notificationId) {
+        return apiClient.put(`/notifications/${notificationId}/read`);
+    },
+    markAllNotificationsAsRead(userId) {
+        return apiClient.put(`/notifications/user/${userId}/read-all`);
+    },
+    deleteNotification(notificationId) {
+        return apiClient.delete(`/notifications/${notificationId}`);
+    },
+    deleteAllReadNotifications(userId) {
+        return apiClient.delete(`/notifications/user/${userId}/read`);
     },
 };

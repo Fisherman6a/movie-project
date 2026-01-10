@@ -33,11 +33,14 @@ public class TokenService {
     /**
      * 验证 token 是否有效
      * @param token JWT token
-     * @return true 如果 token 存在且未过期
+     * @return true 如果 token 未在黑名单中
+     * 注意：不检查token是否存在于Redis，因为JWT本身是无状态的
+     * 只检查是否被加入黑名单（用户登出）
      */
     public boolean isTokenValid(String token) {
-        String key = TOKEN_PREFIX + token;
-        return Boolean.TRUE.equals(redisTemplate.hasKey(key)) && !isTokenBlacklisted(token);
+        // 只检查是否在黑名单中，不检查Redis中是否存在
+        // 这样即使Redis数据丢失或后端重启，只要token没过期且未登出，就仍然有效
+        return !isTokenBlacklisted(token);
     }
 
     /**

@@ -101,7 +101,12 @@
 
     <n-h2 style="margin-top: 24px;">热门影评</n-h2>
     <n-list bordered separator style="background-color: #1a1a1f;">
-      <n-list-item v-for="review in reviews" :key="review.id" class="review-item">
+      <n-list-item
+        v-for="review in reviews"
+        :key="review.id"
+        :id="`review-${review.id}`"
+        class="review-item"
+      >
         <n-thing>
           <template #avatar>
             <n-avatar round :src="review.userProfileImageUrl" />
@@ -171,7 +176,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, nextTick } from 'vue';
+import { useRoute } from 'vue-router';
 import apiService from '@/services/apiService';
 import { useAuthStore } from '@/stores/authStore';
 import {
@@ -322,7 +328,7 @@ const handleVote = async (review, direction) => {
     return;
   }
   try {
-    const response = await apiService.voteOnReview(review.id, direction);
+    const response = await apiService.voteOnReview(review.id, authStore.userId, direction);
     const votedReview = reviews.value.find(r => r.id === review.id);
     if (votedReview) {
       votedReview.likes = response.data.likes;
@@ -332,7 +338,33 @@ const handleVote = async (review, direction) => {
   }
 };
 
-onMounted(fetchMovieData);
+const route = useRoute();
+
+// 滚动到指定评论
+const scrollToReview = async (reviewId) => {
+  await nextTick();
+  const element = document.getElementById(`review-${reviewId}`);
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // 添加高亮效果
+    element.style.backgroundColor = 'rgba(99, 226, 183, 0.1)';
+    setTimeout(() => {
+      element.style.backgroundColor = '';
+    }, 2000);
+  }
+};
+
+onMounted(async () => {
+  await fetchMovieData();
+
+  // 如果URL中有hash，滚动到对应评论
+  if (route.hash) {
+    const reviewId = route.hash.replace('#review-', '');
+    if (reviewId) {
+      setTimeout(() => scrollToReview(reviewId), 500);
+    }
+  }
+});
 </script>
 
 <style scoped>

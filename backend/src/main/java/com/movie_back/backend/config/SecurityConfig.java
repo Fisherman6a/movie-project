@@ -64,14 +64,20 @@ public class SecurityConfig {
                         // 明确列出所有需要公开访问的路径
                         .requestMatchers(
                                 "/api/auth/**",
-                                "/api/verification/**",  // 新增：验证码接口公开访问
+                                "/api/verification/**",  // 验证码接口公开访问
+                                "/api/test/**",  // 测试接口公开访问
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
-                                HttpMethod.GET.name(), "/api/movies/**",
-                                HttpMethod.GET.name(), "/api/actors/**",
-                                HttpMethod.GET.name(), "/api/directors/**",
-                                HttpMethod.GET.name(), "/api/users/{userId}/reviews")
+                                "/ws/**")  // WebSocket 端点
+                        .permitAll()
+                        // GET 请求允许匿名访问
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/movies/**",
+                                "/api/actors/**",
+                                "/api/directors/**",
+                                "/api/reviews",
+                                "/api/search/**")  // ES 搜索接口允许匿名访问
                         .permitAll()
                         // 其他所有未明确允许的请求，都需要进行认证
                         // 更具体的角色权限已由 Controller 中的 @PreAuthorize 注解处理

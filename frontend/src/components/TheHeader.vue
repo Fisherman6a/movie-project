@@ -34,11 +34,13 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { useSearchStore } from '@/stores/searchStore';
 import { NLayoutHeader, NFlex, NText, NInputGroup, NInput, NButton, NSpace, NAvatar, NDropdown, useMessage } from 'naive-ui';
+import { h } from 'vue';
+import { NBadge } from 'naive-ui';
 import apiService from '@/services/apiService';
 
 const router = useRouter();
@@ -46,6 +48,26 @@ const message = useMessage();
 const authStore = useAuthStore();
 const searchTerm = ref('');
 const searchStore = useSearchStore();
+const unreadCount = ref(0);
+
+// 获取未读消息数量
+const fetchUnreadCount = async () => {
+  if (authStore.isAuthenticated && authStore.userId) {
+    try {
+      const response = await apiService.getUnreadCount(authStore.userId);
+      unreadCount.value = response.data.count;
+    } catch (error) {
+      console.error('获取未读消息数量失败', error);
+    }
+  }
+};
+
+// 定期刷新未读消息数量
+onMounted(() => {
+  fetchUnreadCount();
+  // 每30秒刷新一次
+  setInterval(fetchUnreadCount, 30000);
+});
 
 const dropdownOptions = computed(() => {
   const options = [
@@ -56,6 +78,14 @@ const dropdownOptions = computed(() => {
     {
       label: '我的评论',
       key: 'my-reviews'
+    },
+    {
+      label: () => h(
+        NBadge,
+        { value: unreadCount.value, max: 99, showZero: false },
+        { default: () => '我的消息' }
+      ),
+      key: 'my-notifications'
     },
     {
       label: '账号设置',
@@ -118,6 +148,9 @@ const handleDropdownSelect = (key) => {
       break;
     case 'my-reviews':
       router.push('/my-reviews');
+      break;
+    case 'my-notifications':
+      router.push('/my-notifications');
       break;
     case 'admin-dashboard':
       router.push('/admin');
