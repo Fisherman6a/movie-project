@@ -45,7 +45,6 @@ public class IndexUpdateConsumer {
         } catch (Exception e) {
             log.error("处理索引更新消息失败: movieId={}, operation={}",
                     message.getMovieId(), message.getOperation(), e);
-            // 使用自动ACK,异常会导致消息重新入队
             throw new RuntimeException("处理索引更新失败", e);
         }
     }

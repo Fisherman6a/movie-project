@@ -6,15 +6,11 @@ import com.movie_back.backend.entity.Movie;
 import com.movie_back.backend.entity.Review;
 import com.movie_back.backend.repository.MovieRepository;
 import com.movie_back.backend.repository.ReviewRepository;
-import com.rabbitmq.client.Channel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.amqp.support.AmqpHeaders;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -30,9 +26,7 @@ public class RatingUpdateConsumer {
     private final MovieRepository movieRepository;
 
     @RabbitListener(queues = RabbitMQConfig.RATING_UPDATE_QUEUE)
-    public void handleRatingUpdate(RatingUpdateMessage message,
-                                   Channel channel,
-                                   @Header(AmqpHeaders.DELIVERY_TAG) long tag) {
+    public void handleRatingUpdate(RatingUpdateMessage message) {
         try {
             log.info("收到评分更新消息: movieId={}", message.getMovieId());
 
@@ -41,7 +35,6 @@ public class RatingUpdateConsumer {
 
             if (reviews.isEmpty()) {
                 log.warn("电影没有评论: movieId={}", message.getMovieId());
-                channel.basicAck(tag, false);
                 return;
             }
 
@@ -60,17 +53,10 @@ public class RatingUpdateConsumer {
 
             log.info("电影评分更新成功: movieId={}, averageRating={}", message.getMovieId(), averageScore);
 
-            // 4. 确认消息
-            channel.basicAck(tag, false);
-
         } catch (Exception e) {
             log.error("处理评分更新消息失败: movieId={}", message.getMovieId(), e);
-            try {
-                // 消息处理失败，拒绝并重新入队（可选择不重新入队）
-                channel.basicNack(tag, false, false);
-            } catch (IOException ioException) {
-                log.error("拒绝消息失败", ioException);
-            }
+            // 使用自动ACK，异常会导致消息重新入队
+            throw new RuntimeException("处理评分更新失败", e);
         }
     }
 }

@@ -7,10 +7,12 @@ import com.movie_back.backend.dto.movie.RatingDistributionDTO;
 import com.movie_back.backend.entity.Actor;
 import com.movie_back.backend.entity.Director;
 import com.movie_back.backend.entity.Movie;
+import com.movie_back.backend.entity.Review;
 import com.movie_back.backend.exception.ResourceNotFoundException;
 import com.movie_back.backend.repository.ActorRepository;
 import com.movie_back.backend.repository.DirectorRepository;
 import com.movie_back.backend.repository.MovieRepository;
+import com.movie_back.backend.repository.ReviewLikeRepository;
 import com.movie_back.backend.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -35,6 +37,7 @@ public class MovieService {
     private final DirectorRepository directorRepository;
     private final ReviewRepository reviewRepository;
     private final MessageProducerService messageProducer;
+    private final ReviewLikeRepository reviewLikeRepository;
 
     @Value("${default.person.image.url}")
     private String defaultPersonImageUrl;
@@ -78,6 +81,22 @@ public class MovieService {
         if (!movieRepository.existsById(movieId)) {
             throw new ResourceNotFoundException("Movie not found with id: " + movieId);
         }
+
+        // 1. 先获取该电影的所有评论ID
+        List<Review> movieReviews = reviewRepository.findByMovieId(movieId);
+        List<Long> reviewIds = movieReviews.stream()
+                .map(Review::getId)
+                .collect(Collectors.toList());
+
+        // 2. 删除这些评论的所有点赞记录(避免外键约束)
+        for (Long reviewId : reviewIds) {
+            reviewLikeRepository.deleteByReviewId(reviewId);
+        }
+
+        // 3. 删除电影的所有评论
+        reviewRepository.deleteAll(movieReviews);
+
+        // 4. 最后删除电影
         movieRepository.deleteById(movieId);
 
         // 发送索引删除消息

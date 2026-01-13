@@ -51,7 +51,9 @@ public class Movie {
     @JoinTable(name = "movie_directors", joinColumns = @JoinColumn(name = "movie_id"), inverseJoinColumns = @JoinColumn(name = "director_id"))
     private Set<Director> directors = new HashSet<>(); // 导演
 
-    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    // 一对多关系:一部电影可以有多条评论
+    // 注意:不使用 cascade,手动在 Service 层控制删除顺序,避免 Hibernate 懒加载并发修改异常
+    @OneToMany(mappedBy = "movie", fetch = FetchType.LAZY)
     private Set<Review> reviews = new HashSet<>();
 
     // 移除对 UserRating 的引用

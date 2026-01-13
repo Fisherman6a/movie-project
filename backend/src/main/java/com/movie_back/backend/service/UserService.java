@@ -4,10 +4,13 @@ import com.movie_back.backend.dto.user.UserDTO;
 import com.movie_back.backend.dto.user.UserProfileUpdateDTO;
 import com.movie_back.backend.dto.user.UserRegistrationRequest;
 import com.movie_back.backend.entity.Notification;
+import com.movie_back.backend.entity.Review;
 import com.movie_back.backend.entity.Role;
 import com.movie_back.backend.entity.User;
 import com.movie_back.backend.exception.ResourceNotFoundException;
 import com.movie_back.backend.repository.NotificationRepository;
+import com.movie_back.backend.repository.ReviewLikeRepository;
+import com.movie_back.backend.repository.ReviewRepository;
 import com.movie_back.backend.repository.UserRepository;
 
 import java.util.List;
@@ -27,14 +30,20 @@ public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final NotificationRepository notificationRepository;
+    private final ReviewRepository reviewRepository;
+    private final ReviewLikeRepository reviewLikeRepository;
 
     // 手动创建构造函数，并对PasswordEncoder使用@Lazy注解
     public UserService(UserRepository userRepository,
                        @Lazy PasswordEncoder passwordEncoder,
-                       NotificationRepository notificationRepository) {
+                       NotificationRepository notificationRepository,
+                       ReviewRepository reviewRepository,
+                       ReviewLikeRepository reviewLikeRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.notificationRepository = notificationRepository;
+        this.reviewRepository = reviewRepository;
+        this.reviewLikeRepository = reviewLikeRepository;
     }
 
     // Spring Security 会调用此方法来加载用户信息
@@ -160,6 +169,26 @@ public class UserService implements UserDetailsService {
         if (user.getRole() == Role.ROLE_ADMIN) {
             throw new IllegalStateException("Cannot delete an admin account.");
         }
+
+        // 1. 先删除该用户给其他评论点的赞(避免外键约束)
+        reviewLikeRepository.deleteByUserId(id);
+
+        // 2. 获取该用户的所有评论ID
+        List<Review> userReviews = reviewRepository.findByUserId(id);
+        List<Long> reviewIds = userReviews.stream().map(Review::getId).collect(Collectors.toList());
+
+        // 3. 删除这些评论的所有点赞记录(避免外键约束)
+        for (Long reviewId : reviewIds) {
+            reviewLikeRepository.deleteByReviewId(reviewId);
+        }
+
+        // 4. 删除用户的所有评论
+        reviewRepository.deleteAll(userReviews);
+
+        // 5. 删除用户的所有通知
+        notificationRepository.deleteByUserId(id);
+
+        // 6. 最后删除用户
         userRepository.deleteById(id);
     }
 

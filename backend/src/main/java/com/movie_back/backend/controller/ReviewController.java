@@ -76,6 +76,12 @@ public class ReviewController {
         return ResponseEntity.ok(reviews);
     }
 
+    @GetMapping("/reviews/{reviewId}")
+    public ResponseEntity<ReviewDTO> getReviewById(@PathVariable Long reviewId) {
+        ReviewDTO review = reviewService.getReviewById(reviewId);
+        return ResponseEntity.ok(review);
+    }
+
     @PostMapping("/reviews/{reviewId}/vote")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ReviewDTO> voteOnReview(

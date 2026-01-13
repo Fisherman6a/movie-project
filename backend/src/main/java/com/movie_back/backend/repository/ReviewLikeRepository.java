@@ -29,6 +29,16 @@ public interface ReviewLikeRepository extends JpaRepository<ReviewLike, Long> {
     void deleteByReviewIdAndUserId(Long reviewId, Long userId);
 
     /**
+     * 删除某条评论的所有点赞记录
+     */
+    void deleteByReviewId(Long reviewId);
+
+    /**
+     * 删除某个用户的所有点赞记录（用于删除用户时清理）
+     */
+    void deleteByUserId(Long userId);
+
+    /**
      * 批量查询用户对多条评论的点赞状态
      * 用于评论列表展示时，一次性查出当前用户点赞了哪些评论
      */

@@ -51,6 +51,13 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
+    public ReviewDTO getReviewById(Long reviewId) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException("未找到 ID 为 " + reviewId + " 的评论"));
+        return convertToReviewDTO(review);
+    }
+
+    @Transactional(readOnly = true)
     public List<ReviewDTO> getReviewsForMovie(Long movieId) {
         List<Review> reviews = reviewRepository.findByMovieId(movieId);
         return reviews.stream()
@@ -105,6 +112,11 @@ public class ReviewService {
         if (!reviewRepository.existsById(reviewId)) {
             throw new ResourceNotFoundException("未找到 ID 为 " + reviewId + " 的评论");
         }
+
+        // 先删除所有关联的点赞记录（避免外键约束）
+        reviewLikeRepository.deleteByReviewId(reviewId);
+
+        // 再删除评论
         reviewRepository.deleteById(reviewId);
     }
 

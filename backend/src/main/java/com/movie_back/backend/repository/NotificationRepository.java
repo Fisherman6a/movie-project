@@ -26,4 +26,9 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
      * 统计用户未读通知数量
      */
     long countByUserIdAndIsReadFalse(Long userId);
+
+    /**
+     * 删除某个用户的所有通知（用于删除用户时清理）
+     */
+    void deleteByUserId(Long userId);
 }

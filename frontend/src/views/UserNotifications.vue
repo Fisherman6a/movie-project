@@ -250,8 +250,8 @@ const handleDeleteAllRead = async () => {
 const goToReview = async (reviewId) => {
   try {
     // 1. 通过 reviewId 获取评论详情（包含 movieId）
-    const response = await apiService.getAllReviews();
-    const review = response.data.find(r => r.id === reviewId);
+    const response = await apiService.getReviewById(reviewId);
+    const review = response.data;
 
     if (!review) {
       message.warning('找不到相关评论');

@@ -60,7 +60,9 @@ public class User implements UserDetails {
         createdAt = LocalDateTime.now();
     }
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    // 一对多关系:一个用户可以有多条评论
+    // 注意:不使用 cascade,手动在 Service 层控制删除顺序,避免 Hibernate 懒加载并发修改异常
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private Set<Review> reviews = new HashSet<>();
 
     // **核心修改**: 移除对 UserRating 的引用

@@ -42,7 +42,7 @@ export default {
         return apiClient.get(`/movies/search`, { params });
     },
     searchMovies(params) {
-        // 这个接口似乎是按姓名搜电影，但后端实现是按演员/导演，建议保持原样或重命名以明确
+        // 根据演员或导演的姓名来查找他们参演/执导的电影列表。
         return apiClient.get(`/movies/${params.type}?name=${params.name}`);
     },
     searchMoviesByTitle(title) {
@@ -107,6 +107,9 @@ export default {
     // 评论 & 评分 API
     getAllReviews() {
         return apiClient.get('/reviews');
+    },
+    getReviewById(reviewId) {
+        return apiClient.get(`/reviews/${reviewId}`);
     },
     getReviewsForMovie(movieId) {
         return apiClient.get(`/movies/${movieId}/reviews`);
